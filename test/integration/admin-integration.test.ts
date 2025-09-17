@@ -264,13 +264,19 @@ describe('Social Features Integration', () => {
     }
 
     const userId = testUsers[0].userId;
-    const profile = await makeApiRequest(`/profiles/${userId}`);
 
+    // Test profile endpoint
+    const profile = await makeApiRequest(`/profiles/${userId}`);
     expect(profile.userId).toBe(userId);
     expect(profile.username).toBeTruthy();
     expect(profile.displayName).toBeTruthy();
-    expect(Array.isArray(profile.posts)).toBe(true);
-    expect(profile.posts.length).toBeGreaterThan(0);
+    expect(profile.postsCount).toBeGreaterThan(0);
+
+    // Test posts endpoint
+    const postsResponse = await makeApiRequest(`/posts/user/${userId}`);
+    expect(postsResponse.userId).toBe(userId);
+    expect(Array.isArray(postsResponse.posts)).toBe(true);
+    expect(postsResponse.posts.length).toBeGreaterThan(0);
   }, 15000);
 
   test('can follow and unfollow users', async () => {
