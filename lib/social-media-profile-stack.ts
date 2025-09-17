@@ -173,11 +173,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const getFeedFunction = new NodejsFunction(this, 'GetFeedFunction', {
+    const getFeedFunction = new lambda.Function(this, 'GetFeedFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/feed/get-feed.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'get-feed.handler',
+      code: lambda.Code.fromAsset('lambda/feed-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -188,11 +187,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const createFeedItemsFunction = new NodejsFunction(this, 'CreateFeedItemsFunction', {
+    const createFeedItemsFunction = new lambda.Function(this, 'CreateFeedItemsFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/feed/create-feed-items.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'create-feed-items.handler',
+      code: lambda.Code.fromAsset('lambda/feed-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
