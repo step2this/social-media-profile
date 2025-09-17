@@ -42,7 +42,6 @@ export class ProfileFunctions extends Construct {
     const createProfile = new BaseLambda(this, 'CreateProfile', {
       handler: 'create.handler',
       codeAssetPath: 'lambda/profile-esm',
-      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -52,7 +51,6 @@ export class ProfileFunctions extends Construct {
     const getProfile = new BaseLambda(this, 'GetProfile', {
       handler: 'get.handler',
       codeAssetPath: 'lambda/profile-esm',
-      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });
@@ -62,7 +60,6 @@ export class ProfileFunctions extends Construct {
     const updateProfile = new BaseLambda(this, 'UpdateProfile', {
       handler: 'update.handler',
       codeAssetPath: 'lambda/profile-esm',
-      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -72,7 +69,6 @@ export class ProfileFunctions extends Construct {
     const followUser = new BaseLambda(this, 'FollowUser', {
       handler: 'follow.handler',
       codeAssetPath: 'lambda/social-esm',
-      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -82,7 +78,6 @@ export class ProfileFunctions extends Construct {
     const unfollowUser = new BaseLambda(this, 'UnfollowUser', {
       handler: 'unfollow.handler',
       codeAssetPath: 'lambda/social-esm',
-      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -92,7 +87,6 @@ export class ProfileFunctions extends Construct {
     const checkFollow = new BaseLambda(this, 'CheckFollow', {
       handler: 'check-follow.handler',
       codeAssetPath: 'lambda/social-esm',
-      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });
@@ -102,7 +96,6 @@ export class ProfileFunctions extends Construct {
     const getFollowers = new BaseLambda(this, 'GetFollowers', {
       handler: 'get-followers.handler',
       codeAssetPath: 'lambda/social-esm',
-      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });

@@ -38,7 +38,6 @@ export class SocialFunctions extends Construct {
     const likePost = new BaseLambda(this, 'LikePost', {
       handler: 'like-post.handler',
       codeAssetPath: 'lambda/likes-esm',
-      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -48,7 +47,6 @@ export class SocialFunctions extends Construct {
     const unlikePost = new BaseLambda(this, 'UnlikePost', {
       handler: 'unlike-post.handler',
       codeAssetPath: 'lambda/likes-esm',
-      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -58,7 +56,6 @@ export class SocialFunctions extends Construct {
     const checkLikeStatus = new BaseLambda(this, 'CheckLikeStatus', {
       handler: 'check-like-status.handler',
       codeAssetPath: 'lambda/likes-esm',
-      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });
@@ -68,7 +65,6 @@ export class SocialFunctions extends Construct {
     const getFeed = new BaseLambda(this, 'GetFeed', {
       handler: 'get-feed.handler',
       codeAssetPath: 'lambda/feed-esm',
-      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });
@@ -78,7 +74,6 @@ export class SocialFunctions extends Construct {
     const createFeedItems = new BaseLambda(this, 'CreateFeedItems', {
       handler: 'create-feed-items.handler',
       codeAssetPath: 'lambda/feed-esm',
-      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });

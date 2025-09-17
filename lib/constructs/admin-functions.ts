@@ -43,7 +43,6 @@ export class AdminFunctions extends Construct {
     const listUsers = new BaseLambda(this, 'ListUsers', {
       handler: 'list-users.handler',
       codeAssetPath: 'lambda/admin-esm',
-      useESModules: true,
       environment: baseEnvironment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -53,7 +52,6 @@ export class AdminFunctions extends Construct {
     const deleteUser = new BaseLambda(this, 'DeleteUser', {
       handler: 'delete-user.handler',
       codeAssetPath: 'lambda/admin-esm',
-      useESModules: true,
       environment: baseEnvironment,
       timeout: cdk.Duration.seconds(60),
     });
@@ -63,7 +61,6 @@ export class AdminFunctions extends Construct {
     const cleanupAll = new BaseLambda(this, 'CleanupAll', {
       handler: 'cleanup-all.handler',
       codeAssetPath: 'lambda/admin-esm',
-      useESModules: true,
       environment: {
         ...baseEnvironment,
         S3_BUCKET: props.imagesBucket.bucketName,
@@ -76,7 +73,6 @@ export class AdminFunctions extends Construct {
     const generateTestData = new BaseLambda(this, 'GenerateTestData', {
       handler: 'generate-test-data.handler',
       codeAssetPath: 'lambda/admin-esm',
-      useESModules: true,
       environment: {
         ...baseEnvironment,
         API_BASE_URL: props.apiUrl ?? 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
@@ -89,7 +85,6 @@ export class AdminFunctions extends Construct {
     const getEvents = new BaseLambda(this, 'GetEvents', {
       handler: 'get-events.handler',
       codeAssetPath: 'lambda/admin-esm',
-      useESModules: true,
       environment: {
         EVENT_BUS_NAME: props.eventBus.eventBusName,
       },

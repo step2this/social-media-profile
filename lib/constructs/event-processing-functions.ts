@@ -32,7 +32,6 @@ export class EventProcessingFunctions extends Construct {
     const profileProcessor = new BaseLambda(this, 'ProfileEventProcessor', {
       handler: 'profile-processor.handler',
       codeAssetPath: 'lambda/events-esm',
-      useESModules: true,
       environment: {
         TABLE_NAME: props.table.tableName,
       },
@@ -44,7 +43,6 @@ export class EventProcessingFunctions extends Construct {
     const feedProcessorFunc = new BaseLambda(this, 'FeedProcessor', {
       handler: 'feed-processor.handler',
       codeAssetPath: 'lambda/events-esm',
-      useESModules: true,
       environment: {
         API_BASE_URL: props.apiUrl?.replace(/\/$/, '') ?? '',
       },

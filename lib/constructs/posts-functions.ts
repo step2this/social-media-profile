@@ -33,7 +33,6 @@ export class PostsFunctions extends Construct {
     const createPost = new BaseLambda(this, 'CreatePost', {
       handler: 'create.handler',
       codeAssetPath: 'lambda/posts-esm',
-      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -43,7 +42,6 @@ export class PostsFunctions extends Construct {
     const getUserPosts = new BaseLambda(this, 'GetUserPosts', {
       handler: 'get-user-posts.handler',
       codeAssetPath: 'lambda/posts-esm',
-      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });
