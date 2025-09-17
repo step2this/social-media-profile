@@ -1,0 +1,4 @@
+{
+  "httpMethod": "POST",
+  "body": "{\"userId\": \"e6381009-c986-4eab-88b8-a32d103c3f23\", \"content\": \"Testing manual invoke\"}"
+}

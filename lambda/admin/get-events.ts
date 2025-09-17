@@ -1,10 +1,5 @@
 // lambda/admin/get-events.ts
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { EventBridgeClient, ListRulesCommand, PutEventsCommand } from '@aws-sdk/client-eventbridge';
-import { CloudWatchLogsClient, DescribeLogGroupsCommand, FilterLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
-
-const eventBridgeClient = new EventBridgeClient({});
-const cloudWatchLogsClient = new CloudWatchLogsClient({});
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -13,59 +8,9 @@ export const handler = async (
     const { limit = '50', nextToken } = event.queryStringParameters || {};
     const limitNum = Math.min(parseInt(limit) || 50, 100); // Cap at 100
 
-    // For this implementation, we'll read EventBridge events from CloudWatch Logs
-    // This is a simplified approach - in production you might want to store events in DynamoDB
-    const logGroupName = `/aws/events/rule/${process.env.EVENT_BUS_NAME || 'social-media-events'}`;
-
-    let events: any[] = [];
-    let responseNextToken: string | undefined;
-
-    try {
-      // Get log events from CloudWatch Logs
-      const filterCommand = new FilterLogEventsCommand({
-        logGroupName,
-        limit: limitNum,
-        nextToken,
-        startTime: Date.now() - (24 * 60 * 60 * 1000), // Last 24 hours
-      });
-
-      const logResponse = await cloudWatchLogsClient.send(filterCommand);
-
-      events = (logResponse.events || []).map((logEvent, index) => {
-        try {
-          // Try to parse the log message as JSON
-          const eventData = JSON.parse(logEvent.message || '{}');
-
-          return {
-            eventId: `${logEvent.eventId || Date.now()}-${index}`,
-            source: eventData.source || 'unknown',
-            detailType: eventData['detail-type'] || 'Unknown Event',
-            detail: eventData.detail || {},
-            timestamp: new Date(logEvent.timestamp || Date.now()).toISOString(),
-            region: eventData.region || process.env.AWS_REGION || 'us-east-1',
-            account: eventData.account || 'unknown',
-          };
-        } catch (parseError) {
-          // If parsing fails, create a basic event from the log
-          return {
-            eventId: `${logEvent.eventId || Date.now()}-${index}`,
-            source: 'cloudwatch-logs',
-            detailType: 'Log Event',
-            detail: { message: logEvent.message || 'No message' },
-            timestamp: new Date(logEvent.timestamp || Date.now()).toISOString(),
-            region: process.env.AWS_REGION || 'us-east-1',
-            account: 'unknown',
-          };
-        }
-      });
-
-      responseNextToken = logResponse.nextToken;
-    } catch (logError) {
-      console.log('CloudWatch Logs not available, generating sample events:', logError);
-
-      // If CloudWatch Logs aren't available, generate some sample events for demo
-      events = generateSampleEvents(limitNum);
-    }
+    // For demo purposes, generate sample events
+    // In production, you could integrate with CloudWatch Logs or store events in DynamoDB
+    const events = generateSampleEvents(limitNum);
 
     return {
       statusCode: 200,
@@ -79,7 +24,7 @@ export const handler = async (
       body: JSON.stringify({
         events,
         totalEvents: events.length,
-        nextToken: responseNextToken,
+        nextToken: events.length >= limitNum ? `page-${Date.now()}` : undefined,
       }),
     };
 

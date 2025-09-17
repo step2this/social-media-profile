@@ -1,12 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { randomUUID } from 'crypto';
 
-const dynamoClient = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(dynamoClient);
-
-const TABLE_NAME = process.env.TABLE_NAME!;
+const API_BASE_URL = process.env.API_BASE_URL!;
 
 // Random test data arrays
 const firstNames = [
@@ -23,11 +17,6 @@ const lastNames = [
 const techWords = [
   'code', 'dev', 'tech', 'digital', 'cyber', 'data', 'cloud', 'api',
   'stack', 'script', 'byte', 'pixel', 'logic', 'syntax', 'build'
-];
-
-const adjectives = [
-  'creative', 'innovative', 'passionate', 'curious', 'ambitious', 'focused',
-  'dynamic', 'strategic', 'analytical', 'versatile', 'dedicated', 'inspiring'
 ];
 
 const posts = [
@@ -49,151 +38,135 @@ const posts = [
 ];
 
 const bios = [
-  "Building the future, one line of code at a time 💻",
-  "Full-stack developer with a passion for clean code",
+  "Passionate developer building the future one line at a time 🚀",
   "Coffee enthusiast and problem solver ☕",
-  "Creating digital experiences that matter",
+  "Full-stack developer with a love for clean code",
+  "Building beautiful user experiences with modern tech",
   "Code, design, and everything in between",
-  "Turning ideas into reality through technology",
-  "Always learning, always building 🚀",
-  "Making the web a better place, one commit at a time",
   "Developer by day, dreamer by night ✨",
-  "Passionate about user experience and performance"
+  "Turning ideas into digital reality",
+  "Open source contributor and lifelong learner",
+  "Creating scalable solutions for complex problems",
+  "Tech enthusiast sharing the journey"
 ];
 
-function getRandomElement<T>(array: T[]): T {
+// Helper functions
+const getRandomElement = <T>(array: T[]): T => {
   return array[Math.floor(Math.random() * array.length)];
-}
+};
 
-function generateUsername(firstName: string, lastName: string): string {
-  const patterns = [
-    `${firstName.toLowerCase()}${lastName.toLowerCase()}`,
-    `${firstName.toLowerCase()}_${lastName.toLowerCase()}`,
+const generateUsername = (firstName: string, lastName: string): string => {
+  const variants = [
     `${firstName.toLowerCase()}.${lastName.toLowerCase()}`,
-    `${firstName.toLowerCase()}${Math.floor(Math.random() * 999)}`,
+    `${firstName.toLowerCase()}${Math.floor(Math.random() * 1000)}`,
     `${getRandomElement(techWords)}_${firstName.toLowerCase()}`,
-    `${firstName.toLowerCase()}_${getRandomElement(techWords)}`
+    firstName.toLowerCase() + getRandomElement(techWords),
   ];
-  return getRandomElement(patterns);
-}
+  return getRandomElement(variants);
+};
 
-export const handler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-  console.log('Event:', JSON.stringify(event, null, 2));
+// Helper function to make API calls
+const makeApiCall = async (endpoint: string, method: string, body?: any) => {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
 
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-  };
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`);
+  }
 
+  return response.json();
+};
+
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
-    if (event.httpMethod === 'OPTIONS') {
-      return { statusCode: 200, headers, body: '' };
-    }
-
     const { userCount = '5', postsPerUser = '3' } = event.queryStringParameters || {};
     const numUsers = Math.min(parseInt(userCount), 20); // Limit to 20 users
     const numPostsPerUser = Math.min(parseInt(postsPerUser), 10); // Limit to 10 posts per user
 
     const createdUsers: any[] = [];
-    const createdPosts: any[] = [];
+    let totalPostsCreated = 0;
 
-    // Generate users
+    // Generate users and posts using API endpoints
     for (let i = 0; i < numUsers; i++) {
-      const userId = randomUUID();
       const firstName = getRandomElement(firstNames);
       const lastName = getRandomElement(lastNames);
-      const username = generateUsername(firstName, lastName);
       const displayName = `${firstName} ${lastName}`;
-      const timestamp = new Date().toISOString();
+      const username = generateUsername(firstName, lastName);
 
-      const user = {
-        PK: `USER#${userId}`,
-        SK: 'PROFILE',
-        userId,
+      // Create user via API
+      const userPayload = {
         username,
         displayName,
         email: `${username}@example.com`,
         bio: getRandomElement(bios),
-        avatar: '',
         isPrivate: false,
         isVerified: Math.random() > 0.8, // 20% chance of being verified
-        followersCount: Math.floor(Math.random() * 1000),
-        followingCount: Math.floor(Math.random() * 500),
-        postsCount: numPostsPerUser,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        version: 1,
       };
 
-      await docClient.send(new PutCommand({
-        TableName: TABLE_NAME,
-        Item: user
-      }));
+      const createdUser = await makeApiCall('/profiles', 'POST', userPayload) as any;
 
-      createdUsers.push(user);
+      createdUsers.push({
+        userId: createdUser.userId,
+        username: createdUser.username,
+        displayName: createdUser.displayName,
+        postsCount: numPostsPerUser,
+      });
 
-      // Generate posts for this user
+      // Generate posts for this user via API
       for (let j = 0; j < numPostsPerUser; j++) {
-        const postId = randomUUID();
-        const postTimestamp = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(); // Random time in last 7 days
-
-        const post = {
-          PK: `POST#${postId}`,
-          SK: 'METADATA',
-          postId,
-          userId,
-          username,
-          displayName,
-          avatar: user.avatar,
+        const postPayload = {
           content: getRandomElement(posts),
-          imageUrl: '',
-          likesCount: Math.floor(Math.random() * 100),
-          commentsCount: Math.floor(Math.random() * 20),
-          createdAt: postTimestamp,
-          updatedAt: postTimestamp,
-          version: 1,
+          imageUrl: '', // No images for now
         };
 
-        await docClient.send(new PutCommand({
-          TableName: TABLE_NAME,
-          Item: post
-        }));
+        // Note: We need to pass userId in the request somehow
+        // This depends on how the create post endpoint is implemented
+        await makeApiCall('/posts', 'POST', {
+          ...postPayload,
+          userId: createdUser.userId,
+        });
 
-        createdPosts.push(post);
+        totalPostsCreated++;
       }
     }
 
     return {
       statusCode: 200,
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify({
         message: 'Test data generated successfully',
         summary: {
           usersCreated: createdUsers.length,
-          postsCreated: createdPosts.length,
-          totalItems: createdUsers.length + createdPosts.length,
+          postsCreated: totalPostsCreated,
+          totalItems: createdUsers.length + totalPostsCreated,
         },
-        users: createdUsers.map(u => ({
-          userId: u.userId,
-          username: u.username,
-          displayName: u.displayName,
-          postsCount: numPostsPerUser,
-        })),
+        users: createdUsers,
         timestamp: new Date().toISOString(),
       }),
     };
-  } catch (error) {
+
+  } catch (error: any) {
     console.error('Error generating test data:', error);
+
     return {
       statusCode: 500,
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
       body: JSON.stringify({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Failed to generate test data',
+        message: error.message,
+        timestamp: new Date().toISOString(),
       }),
     };
   }

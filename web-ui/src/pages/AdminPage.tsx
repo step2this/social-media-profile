@@ -62,6 +62,7 @@ export const AdminPage: React.FC = () => {
 
   useEffect(() => {
     loadUsers();
+    loadEvents();
   }, []);
 
   const handleDeleteUser = async (userId: string, username: string) => {

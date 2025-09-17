@@ -75,7 +75,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         displayName: profile.displayName,
         avatar: profile.avatar || '',
       },
-    });
+    }) as any;
 
     // Send event to EventBridge for feed generation
     await eventBridgeClient.send(new PutEventsCommand({

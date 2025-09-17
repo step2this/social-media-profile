@@ -1,9 +1,8 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, UpdateCommand, TransactWriteCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
 
-// Initialize AWS SDK clients with enhanced configuration
+// Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
   maxAttempts: 3,
   retryMode: 'adaptive',
@@ -15,7 +14,10 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient, {
   },
 });
 
-const TABLE_NAME = process.env.TABLE_NAME!;
+// Pre-warm the connection with top-level await
+await Promise.resolve();
+
+const TABLE_NAME = process.env.TABLE_NAME;
 
 interface CreatePostRequest {
   userId: string;
@@ -41,7 +43,7 @@ interface PostEntity {
   createdAt: string;
 }
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const handler = async (event) => {
   try {
     const { action } = event.pathParameters || {};
 

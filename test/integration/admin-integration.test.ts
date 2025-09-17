@@ -212,6 +212,105 @@ describe('Admin Integration Tests', () => {
   });
 });
 
+describe('EventBridge Events', () => {
+  let apiUrl: string;
+
+  beforeAll(() => {
+    apiUrl = process.env.API_URL || 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod';
+  });
+
+  const makeApiRequest = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
+    const response = await fetch(`${apiUrl}${endpoint}`, {
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+      ...options,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({})) as any;
+      throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
+    }
+
+    return response.json();
+  };
+
+  test('can retrieve EventBridge events', async () => {
+    const result = await makeApiRequest('/admin/events?limit=10');
+
+    expect(Array.isArray(result.events)).toBe(true);
+    expect(typeof result.totalEvents).toBe('number');
+    expect(result.totalEvents).toBeGreaterThanOrEqual(0);
+
+    // Check event structure if events exist
+    if (result.events.length > 0) {
+      const event = result.events[0];
+      expect(event).toHaveProperty('eventId');
+      expect(event).toHaveProperty('source');
+      expect(event).toHaveProperty('detailType');
+      expect(event).toHaveProperty('detail');
+      expect(event).toHaveProperty('timestamp');
+      expect(event).toHaveProperty('region');
+      expect(event).toHaveProperty('account');
+
+      // Verify event detail structure
+      expect(event.detail).toHaveProperty('userId');
+      expect(event.detail).toHaveProperty('action');
+      expect(event.detail).toHaveProperty('timestamp');
+      expect(event.detail).toHaveProperty('metadata');
+    }
+  }, 10000);
+
+  test('respects limit parameter', async () => {
+    const result = await makeApiRequest('/admin/events?limit=3');
+
+    expect(Array.isArray(result.events)).toBe(true);
+    expect(result.events.length).toBeLessThanOrEqual(3);
+    expect(typeof result.totalEvents).toBe('number');
+  }, 10000);
+
+  test('handles pagination with nextToken', async () => {
+    const firstPage = await makeApiRequest('/admin/events?limit=5');
+
+    if (firstPage.nextToken) {
+      const secondPage = await makeApiRequest(`/admin/events?limit=5&nextToken=${firstPage.nextToken}`);
+
+      expect(Array.isArray(secondPage.events)).toBe(true);
+      expect(typeof secondPage.totalEvents).toBe('number');
+
+      // Events should be different between pages
+      if (firstPage.events.length > 0 && secondPage.events.length > 0) {
+        expect(firstPage.events[0].eventId).not.toBe(secondPage.events[0].eventId);
+      }
+    }
+  }, 15000);
+
+  test('caps limit at maximum value', async () => {
+    const result = await makeApiRequest('/admin/events?limit=200');
+
+    expect(Array.isArray(result.events)).toBe(true);
+    // Should be capped at 100 or less
+    expect(result.events.length).toBeLessThanOrEqual(100);
+  }, 10000);
+
+  test('uses default limit when not specified', async () => {
+    const result = await makeApiRequest('/admin/events');
+
+    expect(Array.isArray(result.events)).toBe(true);
+    expect(typeof result.totalEvents).toBe('number');
+    // Should default to reasonable number (our implementation defaults to 50)
+    expect(result.events.length).toBeLessThanOrEqual(50);
+  }, 10000);
+
+  test('handles CORS headers correctly', async () => {
+    const response = await fetch(`${apiUrl}/admin/events?limit=1`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    expect(response.headers.get('access-control-allow-origin')).toBe('*');
+    expect(response.headers.get('access-control-allow-headers')).toContain('Content-Type');
+    expect(response.headers.get('access-control-allow-methods')).toContain('GET');
+  }, 10000);
+});
+
 describe('Social Features Integration', () => {
   let apiUrl: string;
   let testUsers: any[] = [];

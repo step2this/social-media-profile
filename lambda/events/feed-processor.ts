@@ -1,11 +1,6 @@
 import { EventBridgeEvent } from 'aws-lambda';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, QueryCommand, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 
-const dynamoClient = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(dynamoClient);
-
-const TABLE_NAME = process.env.TABLE_NAME!;
+const API_BASE_URL = process.env.API_BASE_URL!;
 
 interface PostCreatedEvent {
   postId: string;
@@ -18,23 +13,46 @@ interface PostCreatedEvent {
   timestamp: string;
 }
 
+interface FeedItem {
+  followerId: string;
+  postId: string;
+  authorId: string;
+  authorUsername: string;
+  authorDisplayName: string;
+  authorAvatar: string;
+  content: string;
+  imageUrl?: string;
+  timestamp: string;
+}
+
+// Helper function to make API calls
+const makeApiCall = async (endpoint: string, method: string, body?: any) => {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`);
+  }
+
+  return response.json();
+};
+
 export const handler = async (event: EventBridgeEvent<'Post Created', PostCreatedEvent>) => {
   try {
     const { postId, userId, username, displayName, avatar, content, imageUrl, timestamp } = event.detail;
 
     console.log(`Processing post created event for postId: ${postId}, userId: ${userId}`);
 
-    // Get all followers of the user who created the post
-    const followersResult = await docClient.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-      ExpressionAttributeValues: {
-        ':pk': `USER#${userId}`,
-        ':sk': 'FOLLOWER#',
-      },
-    }));
+    // Get all followers of the user who created the post using API
+    const followersResponse = await makeApiCall(`/social/followers/${userId}`, 'GET') as any;
+    const followers = followersResponse.followers || [];
 
-    const followers = followersResult.Items || [];
     console.log(`Found ${followers.length} followers for user ${userId}`);
 
     if (followers.length === 0) {
@@ -43,10 +61,8 @@ export const handler = async (event: EventBridgeEvent<'Post Created', PostCreate
     }
 
     // Create feed items for each follower
-    const timestampMs = Date.parse(timestamp);
-    const feedItems = followers.map(follower => ({
-      PK: `FEED#${follower.followerId}`,
-      SK: `POST#${timestampMs}#${postId}`,
+    const feedItems: FeedItem[] = followers.map((follower: any) => ({
+      followerId: follower.followerId,
       postId,
       authorId: userId,
       authorUsername: username,
@@ -54,30 +70,11 @@ export const handler = async (event: EventBridgeEvent<'Post Created', PostCreate
       authorAvatar: avatar,
       content,
       imageUrl,
-      likesCount: 0,
-      commentsCount: 0,
-      createdAt: timestamp,
+      timestamp,
     }));
 
-    // Batch write feed items (DynamoDB batch write supports max 25 items)
-    const batches = [];
-    for (let i = 0; i < feedItems.length; i += 25) {
-      batches.push(feedItems.slice(i, i + 25));
-    }
-
-    for (const batch of batches) {
-      const putRequests = batch.map(item => ({
-        PutRequest: {
-          Item: item,
-        },
-      }));
-
-      await docClient.send(new BatchWriteCommand({
-        RequestItems: {
-          [TABLE_NAME]: putRequests,
-        },
-      }));
-    }
+    // Create feed items using API
+    await makeApiCall('/feed/items', 'POST', { feedItems });
 
     console.log(`Successfully created ${feedItems.length} feed items for post ${postId}`);
   } catch (error) {

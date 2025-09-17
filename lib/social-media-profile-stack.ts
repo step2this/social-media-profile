@@ -12,6 +12,7 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
+import { RUNTIME_CONFIG, BUNDLING_CONFIG } from './constants/runtime-config';
 
 export class ProfileServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -68,13 +69,10 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Profile CRUD Lambda Functions
     const createProfileFunction = new NodejsFunction(this, 'CreateProfileFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/profile/create.ts',
-      bundling: {
-        externalModules: ['aws-sdk'], // Exclude aws-sdk from bundle
-        bundleAwsSDK: false, // Don't bundle AWS SDK
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -88,13 +86,10 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Social Features Lambda Functions
     const followUserFunction = new NodejsFunction(this, 'FollowUserFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/social/follow.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -107,13 +102,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const unfollowUserFunction = new NodejsFunction(this, 'UnfollowUserFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/social/unfollow.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -126,13 +118,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const checkFollowFunction = new NodejsFunction(this, 'CheckFollowFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/social/check-follow.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -144,13 +133,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const getFollowersFunction = new NodejsFunction(this, 'GetFollowersFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/social/get-followers.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -163,13 +149,10 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Posts Lambda Functions
     const createPostFunction = new NodejsFunction(this, 'CreatePostFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/posts/create.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -183,13 +166,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const getUserPostsFunction = new NodejsFunction(this, 'GetUserPostsFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/posts/get-user-posts.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -201,13 +181,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const getFeedFunction = new NodejsFunction(this, 'GetFeedFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/feed/get-feed.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -219,13 +196,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const createFeedItemsFunction = new NodejsFunction(this, 'CreateFeedItemsFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/feed/create-feed-items.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -239,12 +213,11 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Image Upload Lambda Function
     const imageUploadFunction = new NodejsFunction(this, 'ImageUploadFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/images/upload-url.ts',
       bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
+        ...BUNDLING_CONFIG,
         nodeModules: ['uuid'],
       },
       environment: {
@@ -259,13 +232,10 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Like/Unlike Lambda Functions
     const likePostFunction = new NodejsFunction(this, 'LikePostFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/likes/like-post.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -278,13 +248,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const unlikePostFunction = new NodejsFunction(this, 'UnlikePostFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/likes/unlike-post.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -297,13 +264,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const checkLikeStatusFunction = new NodejsFunction(this, 'CheckLikeStatusFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/likes/check-like-status.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -316,13 +280,10 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Admin Lambda Functions
     const listUsersFunction = new NodejsFunction(this, 'ListUsersFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/admin/list-users.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -334,13 +295,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const deleteUserFunction = new NodejsFunction(this, 'DeleteUserFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/admin/delete-user.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -352,13 +310,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const cleanupAllFunction = new NodejsFunction(this, 'CleanupAllFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/admin/cleanup-all.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         S3_BUCKET: imagesBucket.bucketName,
@@ -371,13 +326,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const generateTestDataFunction = new NodejsFunction(this, 'GenerateTestDataFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/admin/generate-test-data.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         API_BASE_URL: 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
@@ -390,13 +342,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const getEventsFunction = new NodejsFunction(this, 'GetEventsFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/admin/get-events.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
       },
@@ -407,15 +356,11 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    // Data Service Lambda Functions
-    const postsDataServiceFunction = new NodejsFunction(this, 'PostsDataServiceFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'handler',
-      entry: 'lambda/data/posts-data-service.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+    // Data Service Lambda Functions - Using ES Modules
+    const postsDataServiceFunction = new lambda.Function(this, 'PostsDataServiceFunction', {
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
+      handler: 'posts-data-service.handler',
+      code: lambda.Code.fromAsset('lambda/data'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -427,13 +372,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const getProfileFunction = new NodejsFunction(this, 'GetProfileFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/profile/get.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -445,13 +387,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     const updateProfileFunction = new NodejsFunction(this, 'UpdateProfileFunction', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/profile/update.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -465,13 +404,10 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Event Processing Lambda - handles profile events
     const profileEventProcessor = new NodejsFunction(this, 'ProfileEventProcessor', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/events/profile-processor.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -578,13 +514,10 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Feed Processor (defined after API for URL access)
     const feedProcessor = new NodejsFunction(this, 'FeedProcessor', {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
       handler: 'handler',
       entry: 'lambda/events/feed-processor.ts',
-      bundling: {
-        externalModules: ['aws-sdk'],
-        bundleAwsSDK: false,
-      },
+      bundling: BUNDLING_CONFIG,
       environment: {
         API_BASE_URL: api.url.replace(/\/$/, ''),
       },
