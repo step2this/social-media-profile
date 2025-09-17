@@ -368,6 +368,24 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
+    const getEventsFunction = new NodejsFunction(this, 'GetEventsFunction', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'handler',
+      entry: 'lambda/admin/get-events.ts',
+      bundling: {
+        externalModules: ['aws-sdk'],
+        bundleAwsSDK: false,
+      },
+      environment: {
+        EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      logGroup: new logs.LogGroup(this, 'GetEventsLogGroup', {
+        retention: logs.RetentionDays.ONE_WEEK,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      }),
+    });
+
     const getProfileFunction = new NodejsFunction(this, 'GetProfileFunction', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler',
@@ -445,6 +463,18 @@ export class ProfileServiceStack extends cdk.Stack {
     profileTable.grantReadWriteData(deleteUserFunction);
     profileTable.grantReadWriteData(cleanupAllFunction);
     profileTable.grantReadWriteData(generateTestDataFunction);
+
+    // Grant CloudWatch Logs and EventBridge permissions to get events function
+    getEventsFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'logs:DescribeLogGroups',
+        'logs:FilterLogEvents',
+        'events:ListRules',
+        'events:DescribeRule',
+      ],
+      resources: ['*'],
+    }));
 
     // Grant S3 permissions
     imagesBucket.grantWrite(imageUploadFunction);
@@ -559,6 +589,7 @@ export class ProfileServiceStack extends cdk.Stack {
     const adminUserResource = adminUsersResource.addResource('{userId}');
     const adminCleanupResource = adminResource.addResource('cleanup');
     const adminTestDataResource = adminResource.addResource('test-data');
+    const adminEventsResource = adminResource.addResource('events');
 
     // API Methods
     profilesResource.addMethod('POST', new apigateway.LambdaIntegration(createProfileFunction), {
@@ -597,6 +628,7 @@ export class ProfileServiceStack extends cdk.Stack {
     adminUserResource.addMethod('DELETE', new apigateway.LambdaIntegration(deleteUserFunction));
     adminCleanupResource.addMethod('POST', new apigateway.LambdaIntegration(cleanupAllFunction));
     adminTestDataResource.addMethod('POST', new apigateway.LambdaIntegration(generateTestDataFunction));
+    adminEventsResource.addMethod('GET', new apigateway.LambdaIntegration(getEventsFunction));
 
     // S3 Bucket for React App
     const webAppBucket = new s3.Bucket(this, 'WebAppBucket', {
