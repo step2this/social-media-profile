@@ -1,0 +1,10 @@
+{
+  "name": "shared-utils",
+  "version": "1.0.0",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.490.0",
+    "@aws-sdk/client-eventbridge": "^3.490.0",
+    "@aws-sdk/lib-dynamodb": "^3.490.0",
+    "uuid": "^9.0.1"
+  }
+}
