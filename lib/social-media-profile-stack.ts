@@ -68,11 +68,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     // Profile CRUD Lambda Functions
-    const createProfileFunction = new NodejsFunction(this, 'CreateProfileFunction', {
+    const createProfileFunction = new lambda.Function(this, 'CreateProfileFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/profile/create.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'create.handler',
+      code: lambda.Code.fromAsset('lambda/profile-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -371,11 +370,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const getProfileFunction = new NodejsFunction(this, 'GetProfileFunction', {
+    const getProfileFunction = new lambda.Function(this, 'GetProfileFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/profile/get.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'get.handler',
+      code: lambda.Code.fromAsset('lambda/profile-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -386,11 +384,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const updateProfileFunction = new NodejsFunction(this, 'UpdateProfileFunction', {
+    const updateProfileFunction = new lambda.Function(this, 'UpdateProfileFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/profile/update.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'update.handler',
+      code: lambda.Code.fromAsset('lambda/profile-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
