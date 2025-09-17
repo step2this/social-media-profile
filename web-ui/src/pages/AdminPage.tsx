@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { adminService, AdminUser, UserListResponse } from '@/services/admin';
+import { adminService, AdminUser, UserListResponse, EventBridgeEvent, EventsResponse } from '@/services/admin';
 import {
   Settings,
   Users,
@@ -17,7 +17,9 @@ import {
   Loader2,
   AlertTriangle,
   CheckCircle,
-  Home
+  Home,
+  Activity,
+  Clock
 } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
@@ -39,6 +41,11 @@ export const AdminPage: React.FC = () => {
   // Test data generation state
   const [testUserCount, setTestUserCount] = useState(5);
   const [testPostsPerUser, setTestPostsPerUser] = useState(3);
+
+  // EventBridge events state
+  const [events, setEvents] = useState<EventBridgeEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsNextToken, setEventsNextToken] = useState<string | undefined>();
 
   const loadUsers = async (page = 1) => {
     try {
@@ -110,6 +117,24 @@ export const AdminPage: React.FC = () => {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to generate test data' });
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const loadEvents = async (loadMore = false) => {
+    try {
+      setEventsLoading(true);
+      const response: EventsResponse = await adminService.getEvents(50, loadMore ? eventsNextToken : undefined);
+
+      if (loadMore) {
+        setEvents(prev => [...prev, ...response.events]);
+      } else {
+        setEvents(response.events);
+      }
+      setEventsNextToken(response.nextToken);
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to load events' });
+    } finally {
+      setEventsLoading(false);
     }
   };
 
@@ -231,6 +256,75 @@ export const AdminPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* EventBridge Events */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                EventBridge Events
+              </CardTitle>
+              <Button onClick={() => loadEvents(false)} variant="outline" size="sm">
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {eventsLoading && events.length === 0 ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                Loading events...
+              </div>
+            ) : events.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No events found. Try generating some test data or performing actions to trigger events.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="max-h-96 overflow-y-auto space-y-2">
+                  {events.map((event, index) => (
+                    <div key={`${event.eventId}-${index}`} className="border rounded-lg p-4 bg-muted/50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-medium text-sm">{event.source}</span>
+                            <span className="text-xs text-muted-foreground">•</span>
+                            <span className="text-sm text-muted-foreground">{event.detailType}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatDate(event.timestamp)}
+                          </div>
+                          <div className="text-sm">
+                            <pre className="bg-background p-2 rounded border text-xs overflow-x-auto">
+                              {JSON.stringify(event.detail, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {eventsNextToken && (
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={() => loadEvents(true)}
+                      disabled={eventsLoading}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {eventsLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : null}
+                      Load More Events
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Users Table */}
         <Card>

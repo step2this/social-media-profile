@@ -43,6 +43,22 @@ export interface CleanupResponse {
   timestamp: string;
 }
 
+export interface EventBridgeEvent {
+  eventId: string;
+  source: string;
+  detailType: string;
+  detail: any;
+  timestamp: string;
+  region: string;
+  account: string;
+}
+
+export interface EventsResponse {
+  events: EventBridgeEvent[];
+  totalEvents: number;
+  nextToken?: string;
+}
+
 class AdminService {
   private async makeRequest<T>(
     endpoint: string,
@@ -88,6 +104,16 @@ class AdminService {
     return this.makeRequest<TestDataResponse>(`/admin/test-data?userCount=${userCount}&postsPerUser=${postsPerUser}`, {
       method: 'POST',
     });
+  }
+
+  async getEvents(limit = 50, nextToken?: string): Promise<EventsResponse> {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+    if (nextToken) {
+      params.append('nextToken', nextToken);
+    }
+
+    return this.makeRequest<EventsResponse>(`/admin/events?${params.toString()}`);
   }
 }
 
