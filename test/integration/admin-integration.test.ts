@@ -83,7 +83,7 @@ describe('Admin Integration Tests', () => {
     test('can list users with pagination', async () => {
       const result = await makeApiRequest('/admin/users?page=1&limit=5');
 
-      expect(result.users).toBeInstanceOf(Array);
+      expect(Array.isArray(result.users)).toBe(true);
       expect(result.pagination).toHaveProperty('currentPage', 1);
       expect(result.pagination).toHaveProperty('pageSize', 5);
       expect(result.pagination).toHaveProperty('totalUsers');
@@ -269,7 +269,7 @@ describe('Social Features Integration', () => {
     expect(profile.userId).toBe(userId);
     expect(profile.username).toBeTruthy();
     expect(profile.displayName).toBeTruthy();
-    expect(profile.posts).toBeInstanceOf(Array);
+    expect(Array.isArray(profile.posts)).toBe(true);
     expect(profile.posts.length).toBeGreaterThan(0);
   }, 15000);
 
@@ -319,7 +319,7 @@ describe('Social Features Integration', () => {
     const feedResult = await makeApiRequest(`/feed/${userId}`);
 
     expect(feedResult.userId).toBe(userId);
-    expect(feedResult.feedItems).toBeInstanceOf(Array);
+    expect(Array.isArray(feedResult.feedItems)).toBe(true);
     // Feed might be empty if user doesn't follow anyone, that's ok
   }, 15000);
 });
