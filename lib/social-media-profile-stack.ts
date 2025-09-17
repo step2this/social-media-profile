@@ -114,11 +114,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const checkFollowFunction = new NodejsFunction(this, 'CheckFollowFunction', {
+    const checkFollowFunction = new lambda.Function(this, 'CheckFollowFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/social/check-follow.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'check-follow.handler',
+      code: lambda.Code.fromAsset('lambda/social-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
