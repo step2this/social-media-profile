@@ -1,6 +1,8 @@
 import { Profile } from '@/types/profile';
+import { API_ENDPOINTS, buildEndpoint, buildQueryString } from '@/shared/endpoints';
+import { ServiceConfig } from '@/shared/config';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod';
+const API_BASE_URL = ServiceConfig.getApiUrl();
 
 export interface AdminUser extends Profile {
   // Add any admin-specific fields if needed
