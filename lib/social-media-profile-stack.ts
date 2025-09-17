@@ -263,11 +263,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     // Admin Lambda Functions
-    const listUsersFunction = new NodejsFunction(this, 'ListUsersFunction', {
+    const listUsersFunction = new lambda.Function(this, 'ListUsersFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/admin/list-users.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'list-users.handler',
+      code: lambda.Code.fromAsset('lambda/admin-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -278,11 +277,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const deleteUserFunction = new NodejsFunction(this, 'DeleteUserFunction', {
+    const deleteUserFunction = new lambda.Function(this, 'DeleteUserFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/admin/delete-user.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'delete-user.handler',
+      code: lambda.Code.fromAsset('lambda/admin-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -293,11 +291,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const cleanupAllFunction = new NodejsFunction(this, 'CleanupAllFunction', {
+    const cleanupAllFunction = new lambda.Function(this, 'CleanupAllFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/admin/cleanup-all.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'cleanup-all.handler',
+      code: lambda.Code.fromAsset('lambda/admin-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         S3_BUCKET: imagesBucket.bucketName,
@@ -309,11 +306,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const generateTestDataFunction = new NodejsFunction(this, 'GenerateTestDataFunction', {
+    const generateTestDataFunction = new lambda.Function(this, 'GenerateTestDataFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/admin/generate-test-data.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'generate-test-data.handler',
+      code: lambda.Code.fromAsset('lambda/admin-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         API_BASE_URL: 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
@@ -325,11 +321,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const getEventsFunction = new NodejsFunction(this, 'GetEventsFunction', {
+    const getEventsFunction = new lambda.Function(this, 'GetEventsFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/admin/get-events.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'get-events.handler',
+      code: lambda.Code.fromAsset('lambda/admin-esm'),
       environment: {
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
       },
