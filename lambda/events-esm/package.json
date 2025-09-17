@@ -1,0 +1,22 @@
+{
+  "name": "social-media-events-esm",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ES Module event processors for social media application",
+  "main": "profile-processor.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "eventbridge",
+    "esmodules",
+    "social-media"
+  ],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

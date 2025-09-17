@@ -380,11 +380,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     // Event Processing Lambda - handles profile events
-    const profileEventProcessor = new NodejsFunction(this, 'ProfileEventProcessor', {
+    const profileEventProcessor = new lambda.Function(this, 'ProfileEventProcessor', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/events/profile-processor.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'profile-processor.handler',
+      code: lambda.Code.fromAsset('lambda/events-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
@@ -490,11 +489,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     // Feed Processor (defined after API for URL access)
-    const feedProcessor = new NodejsFunction(this, 'FeedProcessor', {
+    const feedProcessor = new lambda.Function(this, 'FeedProcessor', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/events/feed-processor.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'feed-processor.handler',
+      code: lambda.Code.fromAsset('lambda/events-esm'),
       environment: {
         API_BASE_URL: api.url.replace(/\/$/, ''),
       },
