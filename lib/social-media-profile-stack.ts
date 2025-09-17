@@ -84,11 +84,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     // Social Features Lambda Functions
-    const followUserFunction = new NodejsFunction(this, 'FollowUserFunction', {
+    const followUserFunction = new lambda.Function(this, 'FollowUserFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/social/follow.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'follow.handler',
+      code: lambda.Code.fromAsset('lambda/social-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
