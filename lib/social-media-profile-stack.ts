@@ -143,11 +143,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     // Posts Lambda Functions
-    const createPostFunction = new NodejsFunction(this, 'CreatePostFunction', {
+    const createPostFunction = new lambda.Function(this, 'CreatePostFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/posts/create.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'create.handler',
+      code: lambda.Code.fromAsset('lambda/posts-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
