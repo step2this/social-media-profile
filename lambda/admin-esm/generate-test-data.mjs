@@ -1,3 +1,5 @@
+import fetch from 'node-fetch';
+
 // Pre-warm the connections with top-level await
 await Promise.resolve();
 
