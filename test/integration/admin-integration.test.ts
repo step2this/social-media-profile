@@ -1,5 +1,3 @@
-import * as AWS from 'aws-sdk';
-
 // Integration tests for admin functionality
 // These tests run against the actual deployed AWS infrastructure
 
@@ -26,7 +24,7 @@ describe('Admin Integration Tests', () => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch(() => ({})) as any;
       throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
     }
 
@@ -230,7 +228,7 @@ describe('Social Features Integration', () => {
     });
 
     if (result.ok) {
-      const data = await result.json();
+      const data = await result.json() as any;
       testUsers = data.users;
     }
   }, 30000);
@@ -254,7 +252,7 @@ describe('Social Features Integration', () => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch(() => ({})) as any;
       throw new Error(`HTTP ${response.status}: ${errorData.error || response.statusText}`);
     }
 
