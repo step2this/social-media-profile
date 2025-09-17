@@ -99,11 +99,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const unfollowUserFunction = new NodejsFunction(this, 'UnfollowUserFunction', {
+    const unfollowUserFunction = new lambda.Function(this, 'UnfollowUserFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/social/unfollow.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'unfollow.handler',
+      code: lambda.Code.fromAsset('lambda/social-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
