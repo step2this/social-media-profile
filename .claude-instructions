@@ -1,0 +1,52 @@
+# Claude Development Guidelines
+
+## Git Workflow Best Practices
+
+### Use Frequent, Incremental Commits
+- **Commit early and often** - Make small, focused commits for each logical change
+- **Create safe rollback points** - Each commit should be a working state you can revert to
+- **Use descriptive commit messages** - Follow the established format with 🤖 Generated with Claude Code footer
+- **Stage and commit before major changes** - Always have a clean git state before attempting large refactors
+
+### Search and Replace Strategy
+- **Test on single instances first** - Never do bulk replacements without testing the pattern on one occurrence
+- **Verify each change works** - Check compilation/build after each edit before proceeding
+- **Use incremental edits** - Make one small change, test, commit, then proceed to the next
+- **Avoid bulk operations** - Large find/replace operations risk file corruption and are hard to debug
+
+### Example Workflow
+```bash
+# 1. Make small, focused change
+# 2. Test the change works
+git add .
+git commit -m "Descriptive message about specific change"
+# 3. Proceed to next small change
+# 4. If something breaks, easy to rollback: git reset --hard HEAD~1
+```
+
+## File Editing Guidelines
+
+### When Making Multiple Similar Changes
+1. **Start with imports/setup** - Add necessary imports first, test, commit
+2. **Update one method at a time** - Change one function, test, commit
+3. **Verify compilation** - Check TypeScript/build works after each change
+4. **Document breaking changes** - Note any API changes in commit messages
+
+### Error Recovery
+- **Use git reset** - If bulk operation corrupts files, revert immediately
+- **Check file integrity** - Look for syntax errors like unterminated strings
+- **Rebuild from working state** - Don't try to fix corrupted files, start fresh from last good commit
+
+## Testing Strategy
+- **Run tests frequently** - After each logical change, not just at the end
+- **Check specific failing tests** - Use targeted test runs to debug issues quickly
+- **Verify web UI builds** - Ensure React app compiles after service changes
+- **Test endpoints work** - Validate API changes don't break connectivity
+
+## Code Quality
+- **Follow existing patterns** - Match the codebase's style and architecture
+- **Use centralized configuration** - Prefer shared constants over hardcoded values
+- **Environment-aware config** - Support dev/prod environments properly
+- **Maintain backwards compatibility** - Don't break existing interfaces without migration plan
+
+These practices ensure reliable, maintainable development with easy rollback capabilities.
