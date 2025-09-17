@@ -28,10 +28,11 @@ export class EventProcessingFunctions extends Construct {
   constructor(scope: Construct, id: string, props: EventProcessingFunctionsProps) {
     super(scope, id);
 
-    // Profile Event Processor
+    // Profile Event Processor (using ES modules)
     const profileProcessor = new BaseLambda(this, 'ProfileEventProcessor', {
       handler: 'profile-processor.handler',
       codeAssetPath: 'lambda/events-esm',
+      useESModules: true,
       environment: {
         TABLE_NAME: props.table.tableName,
       },
@@ -39,10 +40,11 @@ export class EventProcessingFunctions extends Construct {
     });
     this.profileEventProcessor = profileProcessor.function;
 
-    // Feed Processor
+    // Feed Processor (using ES modules)
     const feedProcessorFunc = new BaseLambda(this, 'FeedProcessor', {
       handler: 'feed-processor.handler',
       codeAssetPath: 'lambda/events-esm',
+      useESModules: true,
       environment: {
         API_BASE_URL: props.apiUrl?.replace(/\/$/, '') ?? '',
       },

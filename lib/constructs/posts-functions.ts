@@ -29,19 +29,21 @@ export class PostsFunctions extends Construct {
       EVENT_BUS_NAME: props.eventBus.eventBusName,
     };
 
-    // Create Post Function
+    // Create Post Function (using ES modules)
     const createPost = new BaseLambda(this, 'CreatePost', {
       handler: 'create.handler',
       codeAssetPath: 'lambda/posts-esm',
+      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
     this.createPostFunction = createPost.function;
 
-    // Get User Posts Function
+    // Get User Posts Function (using ES modules)
     const getUserPosts = new BaseLambda(this, 'GetUserPosts', {
       handler: 'get-user-posts.handler',
       codeAssetPath: 'lambda/posts-esm',
+      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });

@@ -19,10 +19,11 @@ export class ImageFunctions extends Construct {
   constructor(scope: Construct, id: string, props: ImageFunctionsProps) {
     super(scope, id);
 
-    // Image Upload Function
+    // Image Upload Function (using ES modules)
     const imageUpload = new BaseLambda(this, 'ImageUpload', {
       handler: 'upload-url.handler',
       codeAssetPath: 'lambda/images-esm',
+      useESModules: true,
       environment: {
         IMAGES_BUCKET_NAME: props.imagesBucket.bucketName,
       },

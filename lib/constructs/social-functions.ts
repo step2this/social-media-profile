@@ -34,46 +34,51 @@ export class SocialFunctions extends Construct {
       EVENT_BUS_NAME: props.eventBus.eventBusName,
     };
 
-    // Like Post Function
+    // Like Post Function (using ES modules)
     const likePost = new BaseLambda(this, 'LikePost', {
       handler: 'like-post.handler',
       codeAssetPath: 'lambda/likes-esm',
+      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
     this.likePostFunction = likePost.function;
 
-    // Unlike Post Function
+    // Unlike Post Function (using ES modules)
     const unlikePost = new BaseLambda(this, 'UnlikePost', {
       handler: 'unlike-post.handler',
       codeAssetPath: 'lambda/likes-esm',
+      useESModules: true,
       environment,
       timeout: cdk.Duration.seconds(30),
     });
     this.unlikePostFunction = unlikePost.function;
 
-    // Check Like Status Function
+    // Check Like Status Function (using ES modules)
     const checkLikeStatus = new BaseLambda(this, 'CheckLikeStatus', {
       handler: 'check-like-status.handler',
       codeAssetPath: 'lambda/likes-esm',
+      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });
     this.checkLikeStatusFunction = checkLikeStatus.function;
 
-    // Get Feed Function
+    // Get Feed Function (using ES modules)
     const getFeed = new BaseLambda(this, 'GetFeed', {
       handler: 'get-feed.handler',
       codeAssetPath: 'lambda/feed-esm',
+      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });
     this.getFeedFunction = getFeed.function;
 
-    // Create Feed Items Function
+    // Create Feed Items Function (using ES modules)
     const createFeedItems = new BaseLambda(this, 'CreateFeedItems', {
       handler: 'create-feed-items.handler',
       codeAssetPath: 'lambda/feed-esm',
+      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
       timeout: cdk.Duration.seconds(30),
     });

@@ -38,59 +38,73 @@ export class ProfileFunctions extends Construct {
       EVENT_BUS_NAME: props.eventBus.eventBusName,
     };
 
-    // Create Profile Function
+    // Create Profile Function (using ES modules)
     const createProfile = new BaseLambda(this, 'CreateProfile', {
       handler: 'create.handler',
-      codeAssetPath: 'lambda/profiles',
+      codeAssetPath: 'lambda/profile-esm',
+      useESModules: true,
       environment,
+      timeout: cdk.Duration.seconds(30),
     });
     this.createProfileFunction = createProfile.function;
 
-    // Get Profile Function
+    // Get Profile Function (using ES modules)
     const getProfile = new BaseLambda(this, 'GetProfile', {
       handler: 'get.handler',
-      codeAssetPath: 'lambda/profiles',
+      codeAssetPath: 'lambda/profile-esm',
+      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
+      timeout: cdk.Duration.seconds(30),
     });
     this.getProfileFunction = getProfile.function;
 
-    // Update Profile Function
+    // Update Profile Function (using ES modules)
     const updateProfile = new BaseLambda(this, 'UpdateProfile', {
       handler: 'update.handler',
-      codeAssetPath: 'lambda/profiles',
+      codeAssetPath: 'lambda/profile-esm',
+      useESModules: true,
       environment,
+      timeout: cdk.Duration.seconds(30),
     });
     this.updateProfileFunction = updateProfile.function;
 
-    // Follow User Function
+    // Follow User Function (using ES modules)
     const followUser = new BaseLambda(this, 'FollowUser', {
       handler: 'follow.handler',
-      codeAssetPath: 'lambda/profiles',
+      codeAssetPath: 'lambda/social-esm',
+      useESModules: true,
       environment,
+      timeout: cdk.Duration.seconds(30),
     });
     this.followUserFunction = followUser.function;
 
-    // Unfollow User Function
+    // Unfollow User Function (using ES modules)
     const unfollowUser = new BaseLambda(this, 'UnfollowUser', {
       handler: 'unfollow.handler',
-      codeAssetPath: 'lambda/profiles',
+      codeAssetPath: 'lambda/social-esm',
+      useESModules: true,
       environment,
+      timeout: cdk.Duration.seconds(30),
     });
     this.unfollowUserFunction = unfollowUser.function;
 
-    // Check Follow Function
+    // Check Follow Function (using ES modules)
     const checkFollow = new BaseLambda(this, 'CheckFollow', {
       handler: 'check-follow.handler',
-      codeAssetPath: 'lambda/profiles',
+      codeAssetPath: 'lambda/social-esm',
+      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
+      timeout: cdk.Duration.seconds(30),
     });
     this.checkFollowFunction = checkFollow.function;
 
-    // Get Followers Function
+    // Get Followers Function (using ES modules)
     const getFollowers = new BaseLambda(this, 'GetFollowers', {
       handler: 'get-followers.handler',
-      codeAssetPath: 'lambda/profiles',
+      codeAssetPath: 'lambda/social-esm',
+      useESModules: true,
       environment: { TABLE_NAME: props.table.tableName },
+      timeout: cdk.Duration.seconds(30),
     });
     this.getFollowersFunction = getFollowers.function;
 
