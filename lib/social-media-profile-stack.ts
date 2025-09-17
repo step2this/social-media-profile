@@ -128,11 +128,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const getFollowersFunction = new NodejsFunction(this, 'GetFollowersFunction', {
+    const getFollowersFunction = new lambda.Function(this, 'GetFollowersFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/social/get-followers.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'get-followers.handler',
+      code: lambda.Code.fromAsset('lambda/social-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
