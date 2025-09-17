@@ -159,11 +159,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const getUserPostsFunction = new NodejsFunction(this, 'GetUserPostsFunction', {
+    const getUserPostsFunction = new lambda.Function(this, 'GetUserPostsFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/posts/get-user-posts.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'get-user-posts.handler',
+      code: lambda.Code.fromAsset('lambda/posts-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
