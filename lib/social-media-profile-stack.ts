@@ -203,14 +203,10 @@ export class ProfileServiceStack extends cdk.Stack {
 
 
     // Image Upload Lambda Function
-    const imageUploadFunction = new NodejsFunction(this, 'ImageUploadFunction', {
+    const imageUploadFunction = new lambda.Function(this, 'ImageUploadFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/images/upload-url.ts',
-      bundling: {
-        ...BUNDLING_CONFIG,
-        nodeModules: ['uuid'],
-      },
+      handler: 'upload-url.handler',
+      code: lambda.Code.fromAsset('lambda/images-esm'),
       environment: {
         IMAGES_BUCKET_NAME: imagesBucket.bucketName,
       },
