@@ -224,11 +224,10 @@ export class ProfileServiceStack extends cdk.Stack {
     });
 
     // Like/Unlike Lambda Functions
-    const likePostFunction = new NodejsFunction(this, 'LikePostFunction', {
+    const likePostFunction = new lambda.Function(this, 'LikePostFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/likes/like-post.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'like-post.handler',
+      code: lambda.Code.fromAsset('lambda/likes-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -240,11 +239,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const unlikePostFunction = new NodejsFunction(this, 'UnlikePostFunction', {
+    const unlikePostFunction = new lambda.Function(this, 'UnlikePostFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/likes/unlike-post.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'unlike-post.handler',
+      code: lambda.Code.fromAsset('lambda/likes-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
@@ -256,11 +254,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const checkLikeStatusFunction = new NodejsFunction(this, 'CheckLikeStatusFunction', {
+    const checkLikeStatusFunction = new lambda.Function(this, 'CheckLikeStatusFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-      handler: 'handler',
-      entry: 'lambda/likes/check-like-status.ts',
-      bundling: BUNDLING_CONFIG,
+      handler: 'check-like-status.handler',
+      code: lambda.Code.fromAsset('lambda/likes-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
       },
