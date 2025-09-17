@@ -1,8 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, UpdateCommand, TransactWriteCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
-import { v4 as uuidv4 } from 'uuid';
 
 const dynamoClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoClient);
@@ -10,6 +9,24 @@ const eventBridgeClient = new EventBridgeClient({});
 
 const TABLE_NAME = process.env.TABLE_NAME!;
 const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME!;
+const API_BASE_URL = process.env.API_BASE_URL!;
+
+const makeApiCall = async (endpoint: string, method: string, body?: any) => {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`);
+  }
+
+  return response.json();
+};
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -47,66 +64,18 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     }
 
     const profile = profileResult.Item;
-    const postId = uuidv4();
-    const timestamp = new Date().toISOString();
-    const timestampMs = Date.now();
 
-    const post = {
-      PK: `POST#${postId}`,
-      SK: 'METADATA',
-      postId,
+    // Create post using posts-data-service
+    const post = await makeApiCall('/data/posts/create', 'POST', {
       userId,
-      username: profile.username,
-      displayName: profile.displayName,
-      avatar: profile.avatar || '',
       content,
-      imageUrl: imageUrl || undefined,
-      likesCount: 0,
-      commentsCount: 0,
-      createdAt: timestamp,
-    };
-
-    const userPost = {
-      PK: `USER#${userId}`,
-      SK: `POST#${timestampMs}#${postId}`,
-      postId,
-      content,
-      imageUrl: imageUrl || undefined,
-      createdAt: timestamp,
-    };
-
-    // Create post using transaction
-    const transactItems = [
-      {
-        Put: {
-          TableName: TABLE_NAME,
-          Item: post,
-        },
+      imageUrl,
+      userProfile: {
+        username: profile.username,
+        displayName: profile.displayName,
+        avatar: profile.avatar || '',
       },
-      {
-        Put: {
-          TableName: TABLE_NAME,
-          Item: userPost,
-        },
-      },
-      {
-        Update: {
-          TableName: TABLE_NAME,
-          Key: {
-            PK: `USER#${userId}`,
-            SK: 'PROFILE',
-          },
-          UpdateExpression: 'ADD postsCount :inc',
-          ExpressionAttributeValues: {
-            ':inc': 1,
-          },
-        },
-      },
-    ];
-
-    await docClient.send(new TransactWriteCommand({
-      TransactItems: transactItems,
-    }));
+    });
 
     // Send event to EventBridge for feed generation
     await eventBridgeClient.send(new PutEventsCommand({
@@ -115,14 +84,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           Source: 'social-media.posts',
           DetailType: 'Post Created',
           Detail: JSON.stringify({
-            postId,
+            postId: post.postId,
             userId,
             username: profile.username,
             displayName: profile.displayName,
             avatar: profile.avatar || '',
             content,
             imageUrl: imageUrl || undefined,
-            timestamp,
+            timestamp: post.createdAt,
           }),
           EventBusName: EVENT_BUS_NAME,
         },

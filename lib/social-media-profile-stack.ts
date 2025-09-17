@@ -143,6 +143,24 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
+    const getFollowersFunction = new NodejsFunction(this, 'GetFollowersFunction', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'handler',
+      entry: 'lambda/social/get-followers.ts',
+      bundling: {
+        externalModules: ['aws-sdk'],
+        bundleAwsSDK: false,
+      },
+      environment: {
+        TABLE_NAME: profileTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      logGroup: new logs.LogGroup(this, 'GetFollowersLogGroup', {
+        retention: logs.RetentionDays.ONE_WEEK,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      }),
+    });
+
     // Posts Lambda Functions
     const createPostFunction = new NodejsFunction(this, 'CreatePostFunction', {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -155,6 +173,7 @@ export class ProfileServiceStack extends cdk.Stack {
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
+        API_BASE_URL: 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
       },
       timeout: cdk.Duration.seconds(30),
       logGroup: new logs.LogGroup(this, 'CreatePostLogGroup', {
@@ -199,10 +218,10 @@ export class ProfileServiceStack extends cdk.Stack {
       }),
     });
 
-    const feedProcessor = new NodejsFunction(this, 'FeedProcessor', {
+    const createFeedItemsFunction = new NodejsFunction(this, 'CreateFeedItemsFunction', {
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'handler',
-      entry: 'lambda/events/feed-processor.ts',
+      entry: 'lambda/feed/create-feed-items.ts',
       bundling: {
         externalModules: ['aws-sdk'],
         bundleAwsSDK: false,
@@ -211,11 +230,12 @@ export class ProfileServiceStack extends cdk.Stack {
         TABLE_NAME: profileTable.tableName,
       },
       timeout: cdk.Duration.seconds(30),
-      logGroup: new logs.LogGroup(this, 'FeedProcessorLogGroup', {
+      logGroup: new logs.LogGroup(this, 'CreateFeedItemsLogGroup', {
         retention: logs.RetentionDays.ONE_WEEK,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       }),
     });
+
 
     // Image Upload Lambda Function
     const imageUploadFunction = new NodejsFunction(this, 'ImageUploadFunction', {
@@ -360,6 +380,7 @@ export class ProfileServiceStack extends cdk.Stack {
       },
       environment: {
         TABLE_NAME: profileTable.tableName,
+        API_BASE_URL: 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
       },
       timeout: cdk.Duration.minutes(5),
       logGroup: new logs.LogGroup(this, 'GenerateTestDataLogGroup', {
@@ -381,6 +402,25 @@ export class ProfileServiceStack extends cdk.Stack {
       },
       timeout: cdk.Duration.seconds(30),
       logGroup: new logs.LogGroup(this, 'GetEventsLogGroup', {
+        retention: logs.RetentionDays.ONE_WEEK,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      }),
+    });
+
+    // Data Service Lambda Functions
+    const postsDataServiceFunction = new NodejsFunction(this, 'PostsDataServiceFunction', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'handler',
+      entry: 'lambda/data/posts-data-service.ts',
+      bundling: {
+        externalModules: ['aws-sdk'],
+        bundleAwsSDK: false,
+      },
+      environment: {
+        TABLE_NAME: profileTable.tableName,
+      },
+      timeout: cdk.Duration.seconds(30),
+      logGroup: new logs.LogGroup(this, 'PostsDataServiceLogGroup', {
         retention: logs.RetentionDays.ONE_WEEK,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       }),
@@ -450,10 +490,11 @@ export class ProfileServiceStack extends cdk.Stack {
     profileTable.grantReadWriteData(followUserFunction);
     profileTable.grantReadWriteData(unfollowUserFunction);
     profileTable.grantReadData(checkFollowFunction);
+    profileTable.grantReadData(getFollowersFunction);
     profileTable.grantReadWriteData(createPostFunction);
     profileTable.grantReadData(getUserPostsFunction);
     profileTable.grantReadData(getFeedFunction);
-    profileTable.grantReadWriteData(feedProcessor);
+    profileTable.grantWriteData(createFeedItemsFunction);
     profileTable.grantReadWriteData(likePostFunction);
     profileTable.grantReadWriteData(unlikePostFunction);
     profileTable.grantReadData(checkLikeStatusFunction);
@@ -463,18 +504,9 @@ export class ProfileServiceStack extends cdk.Stack {
     profileTable.grantReadWriteData(deleteUserFunction);
     profileTable.grantReadWriteData(cleanupAllFunction);
     profileTable.grantReadWriteData(generateTestDataFunction);
+    profileTable.grantReadWriteData(postsDataServiceFunction);
 
-    // Grant CloudWatch Logs and EventBridge permissions to get events function
-    getEventsFunction.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      actions: [
-        'logs:DescribeLogGroups',
-        'logs:FilterLogEvents',
-        'events:ListRules',
-        'events:DescribeRule',
-      ],
-      resources: ['*'],
-    }));
+    // Get events function doesn't need special permissions for demo (generates sample data)
 
     // Grant S3 permissions
     imagesBucket.grantWrite(imageUploadFunction);
@@ -511,15 +543,6 @@ export class ProfileServiceStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(profileEventProcessor)],
     });
 
-    new events.Rule(this, 'PostCreatedRule', {
-      eventBus: socialMediaEventBus,
-      ruleName: 'post-created-rule',
-      eventPattern: {
-        source: ['social-media.posts'],
-        detailType: ['Post Created'],
-      },
-      targets: [new targets.LambdaFunction(feedProcessor)],
-    });
 
     // Like Events Rules (for potential notifications or analytics)
     new events.Rule(this, 'PostLikedRule', {
@@ -553,6 +576,36 @@ export class ProfileServiceStack extends cdk.Stack {
       },
     });
 
+    // Feed Processor (defined after API for URL access)
+    const feedProcessor = new NodejsFunction(this, 'FeedProcessor', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'handler',
+      entry: 'lambda/events/feed-processor.ts',
+      bundling: {
+        externalModules: ['aws-sdk'],
+        bundleAwsSDK: false,
+      },
+      environment: {
+        API_BASE_URL: api.url.replace(/\/$/, ''),
+      },
+      timeout: cdk.Duration.seconds(30),
+      logGroup: new logs.LogGroup(this, 'FeedProcessorLogGroup', {
+        retention: logs.RetentionDays.ONE_WEEK,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      }),
+    });
+
+    // EventBridge Rules for Feed Processor
+    new events.Rule(this, 'PostCreatedRule', {
+      eventBus: socialMediaEventBus,
+      ruleName: 'post-created-rule',
+      eventPattern: {
+        source: ['social-media.posts'],
+        detailType: ['Post Created'],
+      },
+      targets: [new targets.LambdaFunction(feedProcessor)],
+    });
+
     // API Resources
     const profilesResource = api.root.addResource('profiles');
     const profileResource = profilesResource.addResource('{userId}');
@@ -563,6 +616,7 @@ export class ProfileServiceStack extends cdk.Stack {
     const unfollowResource = socialResource.addResource('unfollow');
     const checkFollowResource = socialResource.addResource('check-follow');
     const checkFollowDetailResource = checkFollowResource.addResource('{followerId}').addResource('{followedUserId}');
+    const followersResource = socialResource.addResource('followers').addResource('{userId}');
 
     // Posts API Resources
     const postsResource = api.root.addResource('posts');
@@ -571,6 +625,7 @@ export class ProfileServiceStack extends cdk.Stack {
     // Feed API Resources
     const feedResource = api.root.addResource('feed');
     const userFeedResource = feedResource.addResource('{userId}');
+    const feedItemsResource = feedResource.addResource('items');
 
     // Images API Resources
     const imagesResource = api.root.addResource('images');
@@ -591,6 +646,11 @@ export class ProfileServiceStack extends cdk.Stack {
     const adminTestDataResource = adminResource.addResource('test-data');
     const adminEventsResource = adminResource.addResource('events');
 
+    // Data API Resources
+    const dataResource = api.root.addResource('data');
+    const dataPostsResource = dataResource.addResource('posts');
+    const dataPostsActionResource = dataPostsResource.addResource('{action}');
+
     // API Methods
     profilesResource.addMethod('POST', new apigateway.LambdaIntegration(createProfileFunction), {
       requestValidator: new apigateway.RequestValidator(this, 'CreateProfileValidator', {
@@ -607,6 +667,7 @@ export class ProfileServiceStack extends cdk.Stack {
     followResource.addMethod('POST', new apigateway.LambdaIntegration(followUserFunction));
     unfollowResource.addMethod('POST', new apigateway.LambdaIntegration(unfollowUserFunction));
     checkFollowDetailResource.addMethod('GET', new apigateway.LambdaIntegration(checkFollowFunction));
+    followersResource.addMethod('GET', new apigateway.LambdaIntegration(getFollowersFunction));
 
     // Posts API Methods
     postsResource.addMethod('POST', new apigateway.LambdaIntegration(createPostFunction));
@@ -614,6 +675,7 @@ export class ProfileServiceStack extends cdk.Stack {
 
     // Feed API Methods
     userFeedResource.addMethod('GET', new apigateway.LambdaIntegration(getFeedFunction));
+    feedItemsResource.addMethod('POST', new apigateway.LambdaIntegration(createFeedItemsFunction));
 
     // Images API Methods
     uploadUrlResource.addMethod('POST', new apigateway.LambdaIntegration(imageUploadFunction));
@@ -629,6 +691,8 @@ export class ProfileServiceStack extends cdk.Stack {
     adminCleanupResource.addMethod('POST', new apigateway.LambdaIntegration(cleanupAllFunction));
     adminTestDataResource.addMethod('POST', new apigateway.LambdaIntegration(generateTestDataFunction));
     adminEventsResource.addMethod('GET', new apigateway.LambdaIntegration(getEventsFunction));
+    dataPostsActionResource.addMethod('POST', new apigateway.LambdaIntegration(postsDataServiceFunction));
+    dataPostsActionResource.addMethod('GET', new apigateway.LambdaIntegration(postsDataServiceFunction));
 
     // S3 Bucket for React App
     const webAppBucket = new s3.Bucket(this, 'WebAppBucket', {
