@@ -89,7 +89,7 @@ npm test               # Run React tests
 ## Key Implementation Details
 
 ### Lambda Function Configuration
-- Runtime: Node.js 18.x
+- Runtime: Node.js 22.x
 - Bundling excludes aws-sdk (available in runtime)
 - 30-second timeout
 - Log retention: 1 week
@@ -119,6 +119,45 @@ The profile-processor.ts demonstrates common event-driven patterns:
 - EventBridge events follow consistent source/detail-type naming
 - CORS enabled for API Gateway with standard headers
 - Remove policies set to DESTROY for development (change for production)
+
+## Code Design Principles
+
+**ALWAYS follow these principles when writing code:**
+
+### Core Principles
+- **Single Responsibility Principle (SRP)**: Each function/class has one job
+- **DRY (Don't Repeat Yourself)**: Avoid code duplication, create reusable components
+- **Functional Programming**: Use lodash for idiomatic functional patterns
+- **Composability**: Build small, composable functions that work together
+- **Separation of Concerns**: Keep different responsibilities in different modules
+- **SOLID**: Use solid design patterns
+
+### Code Style
+- **No hardcoding**: Use constants, configuration, or environment variables
+- **Pure functions**: Functions that don't cause side effects when possible
+- **Small functions**: Keep functions focused and small (single responsibility)
+- **Minimal conditional logic**: Avoid complex if/else chains
+- **Functional over procedural**: Prefer map/filter/reduce over for loops
+
+### Testing Principles
+- **Small, focused tests**: Each test validates one specific behavior
+- **Use data fixtures**: Create reusable test data (consider faker.js or similar)
+- **No hardcoded values in tests**: Use fixtures and constants
+- **Functional test structure**: Arrange-Act-Assert pattern
+- **Mock external dependencies**: Keep tests isolated and fast
+- **All code must be testable with dependency injection**: keep a consistent interface and hide the implementation details
+
+### Error Handling
+- **Hard errors**: Throw clear, descriptive errors that crash the system
+- **Fail fast**: Don't hide errors, make them visible immediately
+- **Type safety**: Use Zod schemas for runtime validation
+- **Request IDs**: Include context for debugging (request IDs, timestamps)
+
+### API Design
+- **Schema validation**: Use Zod for input/output validation
+- **Typed clients**: Generate typed API clients for type safety
+- **Consistent responses**: Follow standard HTTP status codes and error formats
+- **No manual JSON handling**: Use typed schemas and validation
 
 ## Environment Variables
 
@@ -153,3 +192,87 @@ The React web application provides a modern, responsive interface with:
 - Loading states and error handling
 - Modern UI with hover effects and animations
 - Clean component architecture with separation of concerns
+
+## Lambda Debugging Guidelines
+
+When lambda functions fail, use this systematic debugging methodology to identify and resolve issues quickly.
+
+### Debugging Process
+
+Follow this step-by-step process for lambda debugging:
+
+1. **Configuration Check** - Verify lambda exists and is properly configured
+2. **API Endpoint Testing** - Test the API Gateway integration
+3. **Direct Lambda Invocation** - Bypass API Gateway to isolate lambda issues
+4. **Log Analysis** - Examine CloudWatch logs for error details
+
+### Error Categorization
+
+Lambda errors typically fall into these categories:
+
+- **Syntax Errors**: Code compilation issues (TypeScript in .mjs files, invalid JavaScript)
+- **Runtime Errors**: Execution failures (missing dependencies, import errors)
+- **Dependency Errors**: Missing packages or incorrect imports
+- **Configuration Errors**: Wrong environment variables or permissions
+
+### Tools and Scripts
+
+#### Lambda Validation Script
+Use the `validate-lambda.sh` script for systematic debugging:
+
+```bash
+./validate-lambda.sh
+```
+
+This script performs:
+- Lambda function discovery by partial name
+- Configuration validation
+- API endpoint testing with timing
+- Log group analysis
+- Direct lambda invocation with test payloads
+
+#### Manual Debugging Commands
+
+```bash
+# Find lambda function
+aws lambda list-functions --query "Functions[?contains(FunctionName, 'GenerateTestData')].FunctionName"
+
+# Check configuration
+aws lambda get-function-configuration --function-name FUNCTION_NAME
+
+# View recent logs
+aws logs tail "/aws/lambda/FUNCTION_NAME" --since 10m
+
+# Test API endpoint
+curl -X POST "API_URL/endpoint" -H "Content-Type: application/json" -d "{}"
+
+# Direct lambda invocation
+aws lambda invoke --function-name FUNCTION_NAME --payload '{}' response.json
+```
+
+### Common Issues and Solutions
+
+#### TypeScript Syntax in .mjs Files
+**Problem**: `SyntaxError: Unexpected identifier 'as'`
+**Solution**: Remove TypeScript-specific syntax like `as const` from .mjs files
+
+#### Missing Dependencies
+**Problem**: `Cannot find package 'uuid'`
+**Solution**: Add missing packages to lambda deployment bundle or layer
+
+#### CDK Not Detecting Changes
+**Problem**: CDK shows "(no changes)" when lambda code was modified
+**Solution**: Update lambda code directly via AWS CLI or force CDK deployment
+
+#### Log Group Discovery
+**Problem**: Cannot find CloudWatch log group for lambda
+**Solution**: Use pattern `/aws/lambda/FUNCTION_NAME` and verify lambda has been invoked
+
+### Troubleshooting Best Practices
+
+- **Start with validation script**: Run `validate-lambda.sh` for comprehensive checking
+- **Check logs first**: CloudWatch logs reveal most lambda issues
+- **Test incrementally**: Configuration → API → Direct invocation → Logs
+- **Isolate components**: Separate API Gateway issues from lambda execution issues
+- **Document error patterns**: Add new error types to this guide when discovered
+- **Use structured logging**: Include request IDs and timestamps for debugging context

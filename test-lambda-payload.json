@@ -1,0 +1,12 @@
+{
+  "httpMethod": "POST",
+  "path": "/admin/test-data",
+  "queryStringParameters": {
+    "userCount": "2",
+    "postsPerUser": "1"
+  },
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{}"
+}

@@ -1,7 +1,20 @@
 import { ProfileData, PostData, createSuccessResponse, createErrorResponse, createValidationError, handleOptionsRequest } from '../shared/index.mjs';
+// import { sample, range, map, times } from 'lodash-es';
 
 // Pre-warm the connections with top-level await
 await Promise.resolve();
+
+// Configuration constants
+const LIMITS = {
+  MAX_USERS: 20,
+  MAX_POSTS_PER_USER: 10,
+  MIN_VERIFIED_CHANCE: 0.8, // 20% chance of being verified
+};
+
+const DEFAULTS = {
+  USER_COUNT: 5,
+  POSTS_PER_USER: 3,
+};
 
 // Random test data arrays
 const firstNames = [
@@ -51,87 +64,138 @@ const bios = [
   "Tech enthusiast sharing the journey"
 ];
 
-// Helper functions
-const getRandomElement = (array) => {
-  return array[Math.floor(Math.random() * array.length)];
-};
-
+// Pure helper functions using functional programming
 const generateUsername = (firstName, lastName) => {
   const variants = [
     `${firstName.toLowerCase()}.${lastName.toLowerCase()}`,
     `${firstName.toLowerCase()}${Math.floor(Math.random() * 1000)}`,
-    `${getRandomElement(techWords)}_${firstName.toLowerCase()}`,
-    firstName.toLowerCase() + getRandomElement(techWords),
+    `${techWords[Math.floor(Math.random() * techWords.length)]}_${firstName.toLowerCase()}`,
+    firstName.toLowerCase() + techWords[Math.floor(Math.random() * techWords.length)],
   ];
-  return getRandomElement(variants);
+  return variants[Math.floor(Math.random() * variants.length)];
 };
 
-export const handler = async (event) => {
+const createUserPayload = (firstName, lastName) => {
+  const displayName = `${firstName} ${lastName}`;
+  const username = generateUsername(firstName, lastName);
+
+  return {
+    username,
+    displayName,
+    email: `${username}@example.com`,
+    bio: bios[Math.floor(Math.random() * bios.length)],
+    isPrivate: false,
+    isVerified: Math.random() > LIMITS.MIN_VERIFIED_CHANCE,
+  };
+};
+
+const createPostPayload = () => ({
+  content: posts[Math.floor(Math.random() * posts.length)],
+  imageUrl: '', // No images for now
+});
+
+// Functional data generation functions
+const generateUserData = () => {
+  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+  return createUserPayload(firstName, lastName);
+};
+
+const validateParameters = (userCount, postsPerUser) => {
+  const numUsers = Math.min(parseInt(userCount), LIMITS.MAX_USERS);
+  const numPostsPerUser = Math.min(parseInt(postsPerUser), LIMITS.MAX_POSTS_PER_USER);
+
+  if (isNaN(numUsers) || isNaN(numPostsPerUser) || numUsers < 1 || numPostsPerUser < 1) {
+    throw new Error('Invalid userCount or postsPerUser parameters');
+  }
+
+  return { numUsers, numPostsPerUser };
+};
+
+// Database operation functions with proper error handling
+const createUserWithPosts = async (numPostsPerUser) => {
+  const userPayload = generateUserData();
+
+  let createdUser;
   try {
-    if (handleOptionsRequest(event)) {
-      return handleOptionsRequest(event);
-    }
+    createdUser = await ProfileData.createProfile(userPayload);
+  } catch (error) {
+    console.error('Failed to create user:', error);
+    throw new Error(`Failed to create user: ${error.message}`);
+  }
 
-    const { userCount = '5', postsPerUser = '3' } = event.queryStringParameters || {};
-    const numUsers = Math.min(parseInt(userCount), 20); // Limit to 20 users
-    const numPostsPerUser = Math.min(parseInt(postsPerUser), 10); // Limit to 10 posts per user
+  const userSummary = {
+    userId: createdUser.userId,
+    username: createdUser.username,
+    displayName: createdUser.displayName,
+    postsCount: numPostsPerUser,
+  };
 
-    if (isNaN(numUsers) || isNaN(numPostsPerUser) || numUsers < 1 || numPostsPerUser < 1) {
-      return createValidationError('Invalid userCount or postsPerUser parameters');
-    }
+  try {
+    const postCreationPromises = Array.from({ length: numPostsPerUser }, () =>
+      PostData.createPost(createdUser.userId, createPostPayload())
+    );
+    await Promise.all(postCreationPromises);
+  } catch (error) {
+    console.error(`Failed to create posts for user ${createdUser.userId}:`, error);
+    // Continue with other users even if some posts fail
+  }
 
-    const createdUsers = [];
-    let totalPostsCreated = 0;
+  return { userSummary, postsCreated: numPostsPerUser };
+};
 
-    // Generate users and posts using data layer
-    for (let i = 0; i < numUsers; i++) {
-      const firstName = getRandomElement(firstNames);
-      const lastName = getRandomElement(lastNames);
-      const displayName = `${firstName} ${lastName}`;
-      const username = generateUsername(firstName, lastName);
+const generateUsersWithPosts = async (numUsers, numPostsPerUser) => {
+  const userCreationPromises = Array.from({ length: numUsers }, () => createUserWithPosts(numPostsPerUser));
 
-      // Create user via ProfileData
-      const userPayload = {
-        username,
-        displayName,
-        email: `${username}@example.com`,
-        bio: getRandomElement(bios),
-        isPrivate: false,
-        isVerified: Math.random() > 0.8, // 20% chance of being verified
-      };
+  try {
+    const results = await Promise.all(userCreationPromises);
 
-      const createdUser = await ProfileData.createProfile(userPayload);
+    return {
+      users: results.map(result => result.userSummary),
+      totalPostsCreated: results.reduce((sum, result) => sum + result.postsCreated, 0),
+    };
+  } catch (error) {
+    console.error('Failed to generate users and posts:', error);
+    throw new Error(`Failed to generate test data: ${error.message}`);
+  }
+};
 
-      createdUsers.push({
-        userId: createdUser.userId,
-        username: createdUser.username,
-        displayName: createdUser.displayName,
-        postsCount: numPostsPerUser,
-      });
+const createSuccessfulResponse = (users, totalPostsCreated) =>
+  createSuccessResponse({
+    message: 'Test data generated successfully',
+    summary: {
+      usersCreated: users.length,
+      postsCreated: totalPostsCreated,
+      totalItems: users.length + totalPostsCreated,
+    },
+    users,
+    timestamp: new Date().toISOString(),
+  });
 
-      // Generate posts for this user via PostData
-      for (let j = 0; j < numPostsPerUser; j++) {
-        const postPayload = {
-          content: getRandomElement(posts),
-          imageUrl: '', // No images for now
-        };
+// Main handler function - now much simpler and focused
+export const handler = async (event) => {
+  // Handle OPTIONS request
+  const optionsResponse = handleOptionsRequest(event);
+  if (optionsResponse) {
+    return optionsResponse;
+  }
 
-        await PostData.createPost(createdUser.userId, postPayload);
-        totalPostsCreated++;
-      }
-    }
+  // Extract and validate parameters
+  const { userCount = DEFAULTS.USER_COUNT.toString(), postsPerUser = DEFAULTS.POSTS_PER_USER.toString() } = event.queryStringParameters || {};
 
-    return createSuccessResponse({
-      message: 'Test data generated successfully',
-      summary: {
-        usersCreated: createdUsers.length,
-        postsCreated: totalPostsCreated,
-        totalItems: createdUsers.length + totalPostsCreated,
-      },
-      users: createdUsers,
-      timestamp: new Date().toISOString(),
-    });
+  let validatedParams;
+  try {
+    validatedParams = validateParameters(userCount, postsPerUser);
+  } catch (error) {
+    return createValidationError(error.message);
+  }
 
+  const { numUsers, numPostsPerUser } = validatedParams;
+
+  // Generate test data
+  try {
+    const { users, totalPostsCreated } = await generateUsersWithPosts(numUsers, numPostsPerUser);
+    return createSuccessfulResponse(users, totalPostsCreated);
   } catch (error) {
     console.error('Error generating test data:', error);
     return createErrorResponse('Failed to generate test data', error);

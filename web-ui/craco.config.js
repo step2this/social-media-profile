@@ -11,6 +11,12 @@ module.exports = {
       moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
       },
+      transformIgnorePatterns: [
+        'node_modules/(?!(@faker-js/faker)/)'
+      ],
+      transform: {
+        '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['@babel/preset-env'] }],
+      },
     },
   },
 };
