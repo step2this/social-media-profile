@@ -32,11 +32,11 @@ import { AdminFixtures } from '../../test/fixtures/admin-fixtures';
 
 // Test helper - single responsibility: extract Zod error path
 const getZodErrorPath = (error: ZodError): string =>
-  error.errors && error.errors.length > 0 ? error.errors[0].path.join('.') : '';
+  error.issues && error.issues.length > 0 ? error.issues[0].path.join('.') : '';
 
 // Test helper - single responsibility: extract Zod error message
 const getZodErrorMessage = (error: ZodError): string =>
-  error.errors && error.errors.length > 0 ? error.errors[0].message : '';
+  error.issues && error.issues.length > 0 ? error.issues[0].message : '';
 
 // Test helper - single responsibility: expect validation success
 const expectValidationSuccess = <T>(schema: any, data: unknown): T => {
@@ -51,10 +51,7 @@ const expectValidationFailure = (schema: any, data: unknown, expectedPath?: stri
   expect(result.success).toBe(false);
 
   if (expectedPath) {
-    // Debug: log the actual error structure
-    console.log('Error structure:', JSON.stringify(result.error, null, 2));
     const actualPath = getZodErrorPath(result.error);
-    console.log('Expected path:', expectedPath, 'Actual path:', actualPath);
     expect(actualPath).toBe(expectedPath);
   }
 

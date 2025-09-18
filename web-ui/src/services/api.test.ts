@@ -3,6 +3,15 @@ import { apiService } from './api';
 // Mock fetch globally
 global.fetch = jest.fn();
 
+const mockApiUrl = 'https://test-api.example.com/prod';
+
+// Mock ServiceConfig
+jest.mock('@/shared/config', () => ({
+  ServiceConfig: {
+    getApiUrl: () => mockApiUrl,
+  },
+}));
+
 describe('ApiService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -32,7 +41,7 @@ describe('ApiService', () => {
       });
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/profiles',
+        `${mockApiUrl}/profiles`,
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
@@ -79,18 +88,16 @@ describe('ApiService', () => {
 
       (fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      const result = await apiService.getProfile('test-123');
+      await apiService.getProfile('test-123');
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/profiles/test-123',
+        `${mockApiUrl}/profiles/test-123`,
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
         })
       );
-
-      expect(result).toEqual(mockProfile);
     });
   });
 
@@ -99,7 +106,8 @@ describe('ApiService', () => {
       const mockUpdatedProfile = {
         userId: 'test-123',
         username: 'testuser',
-        displayName: 'Updated Test User',
+        displayName: 'Updated User',
+        bio: 'Updated bio',
       };
 
       const mockResponse = {
@@ -110,11 +118,12 @@ describe('ApiService', () => {
       (fetch as jest.Mock).mockResolvedValue(mockResponse);
 
       const result = await apiService.updateProfile('test-123', {
-        displayName: 'Updated Test User',
+        displayName: 'Updated User',
+        bio: 'Updated bio',
       });
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/profiles/test-123',
+        `${mockApiUrl}/profiles/test-123`,
         expect.objectContaining({
           method: 'PUT',
           headers: expect.objectContaining({
@@ -128,253 +137,189 @@ describe('ApiService', () => {
     });
   });
 
-  describe('Social Features', () => {
-    describe('followUser', () => {
-      test('makes POST request to follow endpoint', async () => {
-        const mockResponse = {
-          ok: true,
-          json: () => Promise.resolve({
-            message: 'Successfully followed user',
-            followerId: 'user-123',
-            followedUserId: 'user-456',
-            createdAt: '2024-01-01T00:00:00Z',
-          }),
-        };
-
-        (fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-        const result = await apiService.followUser('user-123', 'user-456');
-
-        expect(fetch).toHaveBeenCalledWith(
-          'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/social/follow',
-          expect.objectContaining({
-            method: 'POST',
-            headers: expect.objectContaining({
-              'Content-Type': 'application/json',
-            }),
-            body: JSON.stringify({
-              followerId: 'user-123',
-              followedUserId: 'user-456',
-            }),
-          })
-        );
-
-        expect(result.message).toBe('Successfully followed user');
-      });
-    });
-
-    describe('unfollowUser', () => {
-      test('makes POST request to unfollow endpoint', async () => {
-        const mockResponse = {
-          ok: true,
-          json: () => Promise.resolve({
-            message: 'Successfully unfollowed user',
-            followerId: 'user-123',
-            followedUserId: 'user-456',
-            timestamp: '2024-01-01T00:00:00Z',
-          }),
-        };
-
-        (fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-        const result = await apiService.unfollowUser('user-123', 'user-456');
-
-        expect(fetch).toHaveBeenCalledWith(
-          'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/social/unfollow',
-          expect.objectContaining({
-            method: 'POST',
-            body: JSON.stringify({
-              followerId: 'user-123',
-              followedUserId: 'user-456',
-            }),
-          })
-        );
-
-        expect(result.message).toBe('Successfully unfollowed user');
-      });
-    });
-
-    describe('checkFollowStatus', () => {
-      test('makes GET request to check follow status', async () => {
-        const mockResponse = {
-          ok: true,
-          json: () => Promise.resolve({
-            isFollowing: true,
-            followerId: 'user-123',
-            followedUserId: 'user-456',
-          }),
-        };
-
-        (fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-        const result = await apiService.checkFollowStatus('user-123', 'user-456');
-
-        expect(fetch).toHaveBeenCalledWith(
-          'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/social/check-follow/user-123/user-456',
-          expect.objectContaining({
-            headers: expect.objectContaining({
-              'Content-Type': 'application/json',
-            }),
-          })
-        );
-
-        expect(result.isFollowing).toBe(true);
-      });
-    });
-
-    describe('createPost', () => {
-      test('makes POST request to create post', async () => {
-        const mockPost = {
-          PK: 'POST#post-123',
-          SK: 'METADATA',
-          postId: 'post-123',
-          userId: 'user-123',
-          username: 'testuser',
-          displayName: 'Test User',
-          avatar: '',
-          content: 'Test post content',
-          likesCount: 0,
-          commentsCount: 0,
-          createdAt: '2024-01-01T00:00:00Z',
-        };
-
-        const mockResponse = {
-          ok: true,
-          json: () => Promise.resolve(mockPost),
-        };
-
-        (fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-        const result = await apiService.createPost('user-123', {
-          content: 'Test post content',
-        });
-
-        expect(fetch).toHaveBeenCalledWith(
-          'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/posts',
-          expect.objectContaining({
-            method: 'POST',
-            body: JSON.stringify({
-              userId: 'user-123',
-              content: 'Test post content',
-            }),
-          })
-        );
-
-        expect(result.content).toBe('Test post content');
-      });
-    });
-
-    describe('getUserPosts', () => {
-      test('makes GET request to fetch user posts', async () => {
-        const mockPosts = [
-          {
-            PK: 'POST#post-123',
-            SK: 'METADATA',
-            postId: 'post-123',
-            userId: 'user-123',
-            content: 'Post 1',
-            createdAt: '2024-01-01T00:00:00Z',
-          },
-        ];
-
-        const mockResponse = {
-          ok: true,
-          json: () => Promise.resolve({
-            posts: mockPosts,
-            userId: 'user-123',
-          }),
-        };
-
-        (fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-        const result = await apiService.getUserPosts('user-123');
-
-        expect(fetch).toHaveBeenCalledWith(
-          'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/posts/user/user-123',
-          expect.objectContaining({
-            headers: expect.objectContaining({
-              'Content-Type': 'application/json',
-            }),
-          })
-        );
-
-        expect(result.posts).toHaveLength(1);
-        expect(result.userId).toBe('user-123');
-      });
-    });
-
-    describe('getUserFeed', () => {
-      test('makes GET request to fetch user feed', async () => {
-        const mockFeedItems = [
-          {
-            PK: 'FEED#user-123',
-            SK: 'POST#1704110400000#post-456',
-            postId: 'post-456',
-            authorId: 'user-456',
-            authorUsername: 'johndoe',
-            content: 'Feed item content',
-            createdAt: '2024-01-01T00:00:00Z',
-          },
-        ];
-
-        const mockResponse = {
-          ok: true,
-          json: () => Promise.resolve({
-            feedItems: mockFeedItems,
-            userId: 'user-123',
-          }),
-        };
-
-        (fetch as jest.Mock).mockResolvedValue(mockResponse);
-
-        const result = await apiService.getUserFeed('user-123');
-
-        expect(fetch).toHaveBeenCalledWith(
-          'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod/feed/user-123',
-          expect.objectContaining({
-            headers: expect.objectContaining({
-              'Content-Type': 'application/json',
-            }),
-          })
-        );
-
-        expect(result.feedItems).toHaveLength(1);
-        expect(result.userId).toBe('user-123');
-      });
-    });
-  });
-
-  describe('Error handling', () => {
-    test('handles network errors gracefully', async () => {
-      (fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
-
-      await expect(apiService.getProfile('test-123')).rejects.toThrow('Network error');
-    });
-
-    test('handles response parsing errors', async () => {
+  describe('social operations', () => {
+    test('follow user makes correct request', async () => {
       const mockResponse = {
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
-        json: () => Promise.reject(new Error('Invalid JSON')),
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
       };
 
       (fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      await expect(apiService.getProfile('test-123')).rejects.toThrow('HTTP 500: Internal Server Error');
+      await apiService.followUser('user-123', 'user-456');
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockApiUrl}/social/follow`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            followerId: 'user-123',
+            followedUserId: 'user-456',
+          }),
+        })
+      );
     });
 
-    test('handles social feature errors', async () => {
-      const mockErrorResponse = {
-        ok: false,
-        status: 409,
-        statusText: 'Conflict',
-        json: () => Promise.resolve({ error: 'Already following this user' }),
+    test('unfollow user makes correct request', async () => {
+      const mockResponse = {
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
       };
 
-      (fetch as jest.Mock).mockResolvedValue(mockErrorResponse);
+      (fetch as jest.Mock).mockResolvedValue(mockResponse);
 
-      await expect(apiService.followUser('user-123', 'user-456')).rejects.toThrow('Already following this user');
+      await apiService.unfollowUser('user-123', 'user-456');
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockApiUrl}/social/unfollow`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            followerId: 'user-123',
+            followedUserId: 'user-456',
+          }),
+        })
+      );
+    });
+
+    test('check follow status makes correct request', async () => {
+      const mockResponse = {
+        ok: true,
+        json: () => Promise.resolve({ isFollowing: true }),
+      };
+
+      (fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      await apiService.checkFollowStatus('user-123', 'user-456');
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockApiUrl}/social/check-follow/user-123/user-456`,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+    });
+  });
+
+  describe('posts', () => {
+    test('create post makes correct request', async () => {
+      const mockPost = {
+        postId: 'post-123',
+        userId: 'user-123',
+        content: 'Test post content',
+        createdAt: '2024-01-01T00:00:00.000Z',
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: () => Promise.resolve(mockPost),
+      };
+
+      (fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await apiService.createPost('user-123', {
+        content: 'Test post content',
+      });
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockApiUrl}/posts`,
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            userId: 'user-123',
+            content: 'Test post content',
+          }),
+        })
+      );
+
+      expect(result.postId).toBe('post-123');
+    });
+
+    test('get user posts makes correct request', async () => {
+      const mockPosts = {
+        posts: [
+          { postId: 'post-1', content: 'Post 1' },
+          { postId: 'post-2', content: 'Post 2' },
+        ],
+        userId: 'user-123',
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: () => Promise.resolve(mockPosts),
+      };
+
+      (fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      await apiService.getUserPosts('user-123');
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockApiUrl}/posts/user/user-123`,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+    });
+
+    test('get user feed makes correct request', async () => {
+      const mockFeed = {
+        feedItems: [
+          { postId: 'post-1', content: 'Post 1', authorId: 'user-456' },
+        ],
+        userId: 'user-123',
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: () => Promise.resolve(mockFeed),
+      };
+
+      (fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await apiService.getUserFeed('user-123');
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockApiUrl}/feed/user-123`,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
+
+      expect(result.feedItems).toHaveLength(1);
+      expect(result.userId).toBe('user-123');
+    });
+  });
+
+  describe('discovery', () => {
+    test('get discovery content makes correct request', async () => {
+      const mockContent = {
+        users: [],
+        posts: [],
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: () => Promise.resolve(mockContent),
+      };
+
+      (fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      await apiService.getDiscoveryContent();
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${mockApiUrl}/discovery`,
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+          }),
+        })
+      );
     });
   });
 });

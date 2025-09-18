@@ -16,7 +16,7 @@ export const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Enhanced environment-aware service configuration for web UI
 export class ServiceConfig {
-  private static readonly DEFAULT_PROD_URL = 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod';
+  private static readonly DEFAULT_PROD_URL = 'https://px21il00t5.execute-api.us-east-1.amazonaws.com/prod';
   private static readonly DEFAULT_DEV_URL = 'http://localhost:3000';
 
   /**

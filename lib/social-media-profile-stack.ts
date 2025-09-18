@@ -150,7 +150,7 @@ export class ProfileServiceStack extends cdk.Stack {
       environment: {
         TABLE_NAME: profileTable.tableName,
         EVENT_BUS_NAME: socialMediaEventBus.eventBusName,
-        API_BASE_URL: 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
+        API_BASE_URL: 'https://px21il00t5.execute-api.us-east-1.amazonaws.com/prod',
       },
       timeout: cdk.Duration.seconds(30),
       logGroup: new logs.LogGroup(this, 'CreatePostLogGroup', {
@@ -312,7 +312,7 @@ export class ProfileServiceStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda/admin-esm'),
       environment: {
         TABLE_NAME: profileTable.tableName,
-        API_BASE_URL: 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
+        API_BASE_URL: 'https://px21il00t5.execute-api.us-east-1.amazonaws.com/prod',
       },
       timeout: cdk.Duration.minutes(5),
       logGroup: new logs.LogGroup(this, 'GenerateTestDataLogGroup', {

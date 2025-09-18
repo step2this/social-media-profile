@@ -75,7 +75,7 @@ export class AdminFunctions extends Construct {
       codeAssetPath: 'lambda',
       environment: {
         ...baseEnvironment,
-        API_BASE_URL: props.apiUrl ?? 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
+        API_BASE_URL: props.apiUrl ?? 'https://px21il00t5.execute-api.us-east-1.amazonaws.com/prod',
       },
       timeout: cdk.Duration.minutes(5),
     });

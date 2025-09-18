@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { range } from 'lodash';
+import { range } from '../../shared/utils';
 import {
   GenerateTestDataRequest,
   GenerateTestDataResponse,
@@ -141,7 +141,7 @@ export const AdminFixtures = {
       }),
 
     serverError: (): Response =>
-      new Response(JSON.stringify({ message: 'Internal server error' }), {
+      new Response(JSON.stringify({ error: 'Internal server error' }), {
         status: 502,
         headers: { 'Content-Type': 'application/json' },
       }),

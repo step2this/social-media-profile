@@ -1,4 +1,4 @@
-import { pipe } from 'lodash';
+import { pipe } from '../shared/utils';
 import { ServiceConfig } from '../shared/config';
 import {
   GenerateTestDataRequest,

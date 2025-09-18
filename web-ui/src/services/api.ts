@@ -1,13 +1,12 @@
 import { Profile, CreateProfileRequest, UpdateProfileRequest, ApiError, Post, CreatePostRequest, FeedItem } from '@/types/profile';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod';
+import { ServiceConfig } from '@/shared/config';
 
 class ApiService {
   private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const url = `${ServiceConfig.getApiUrl()}${endpoint}`;
 
     const response = await fetch(url, {
       headers: {
@@ -85,6 +84,11 @@ class ApiService {
     // This would be implemented as a search endpoint in the backend
     // For now, return mock data
     return [];
+  }
+
+  // Discovery content
+  async getDiscoveryContent(): Promise<{ users: Profile[]; posts: Post[] }> {
+    return this.makeRequest('/discovery');
   }
 
   // Image Upload methods
