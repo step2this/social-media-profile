@@ -41,8 +41,8 @@ export class AdminFunctions extends Construct {
 
     // List Users Function (using ES modules)
     const listUsers = new BaseLambda(this, 'ListUsers', {
-      handler: 'list-users.handler',
-      codeAssetPath: 'lambda/admin-esm',
+      handler: 'admin-esm/list-users.handler',
+      codeAssetPath: 'lambda',
       environment: baseEnvironment,
       timeout: cdk.Duration.seconds(30),
     });
@@ -50,8 +50,8 @@ export class AdminFunctions extends Construct {
 
     // Delete User Function (using ES modules)
     const deleteUser = new BaseLambda(this, 'DeleteUser', {
-      handler: 'delete-user.handler',
-      codeAssetPath: 'lambda/admin-esm',
+      handler: 'admin-esm/delete-user.handler',
+      codeAssetPath: 'lambda',
       environment: baseEnvironment,
       timeout: cdk.Duration.seconds(60),
     });
@@ -59,8 +59,8 @@ export class AdminFunctions extends Construct {
 
     // Cleanup All Function (using ES modules)
     const cleanupAll = new BaseLambda(this, 'CleanupAll', {
-      handler: 'cleanup-all.handler',
-      codeAssetPath: 'lambda/admin-esm',
+      handler: 'admin-esm/cleanup-all.handler',
+      codeAssetPath: 'lambda',
       environment: {
         ...baseEnvironment,
         S3_BUCKET: props.imagesBucket.bucketName,
@@ -71,8 +71,8 @@ export class AdminFunctions extends Construct {
 
     // Generate Test Data Function (using ES modules)
     const generateTestData = new BaseLambda(this, 'GenerateTestData', {
-      handler: 'generate-test-data.handler',
-      codeAssetPath: 'lambda/admin-esm',
+      handler: 'admin-esm/generate-test-data.handler',
+      codeAssetPath: 'lambda',
       environment: {
         ...baseEnvironment,
         API_BASE_URL: props.apiUrl ?? 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod',
@@ -83,8 +83,8 @@ export class AdminFunctions extends Construct {
 
     // Get Events Function (using ES modules)
     const getEvents = new BaseLambda(this, 'GetEvents', {
-      handler: 'get-events.handler',
-      codeAssetPath: 'lambda/admin-esm',
+      handler: 'admin-esm/get-events.handler',
+      codeAssetPath: 'lambda',
       environment: {
         EVENT_BUS_NAME: props.eventBus.eventBusName,
       },

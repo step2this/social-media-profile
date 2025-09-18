@@ -22,5 +22,5 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "exclude": ["cdk.out", "web-ui"]
+  "exclude": ["cdk.out", "web-ui", "test"]
 }

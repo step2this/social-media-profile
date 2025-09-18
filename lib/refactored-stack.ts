@@ -55,6 +55,14 @@ export class RefactoredProfileServiceStack extends cdk.Stack {
       imagesBucket: dataLayer.imagesBucket,
     });
 
+    // Admin Functions - Created first without API URL to break circular dependency
+    const adminFunctions = new AdminFunctions(this, 'AdminFunctions', {
+      table: dataLayer.table,
+      eventBus: dataLayer.eventBus,
+      imagesBucket: dataLayer.imagesBucket,
+      // apiUrl will be added later after API Gateway is created
+    });
+
     // Data Service Lambda Functions (legacy, kept for compatibility)
     const postsDataServiceFunction = new lambda.Function(this, 'PostsDataServiceFunction', {
       runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
@@ -111,44 +119,16 @@ export class RefactoredProfileServiceStack extends cdk.Stack {
       // Image Functions
       imageUploadFunction: imageFunctions.imageUploadFunction,
 
-      // Admin Functions - Will be added after admin construct
-      listUsersFunction: new lambda.Function(this, 'PlaceholderListUsers', {
-        runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => ({ statusCode: 200, body: "Placeholder" });'),
-      }),
-      deleteUserFunction: new lambda.Function(this, 'PlaceholderDeleteUser', {
-        runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => ({ statusCode: 200, body: "Placeholder" });'),
-      }),
-      cleanupAllFunction: new lambda.Function(this, 'PlaceholderCleanupAll', {
-        runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => ({ statusCode: 200, body: "Placeholder" });'),
-      }),
-      generateTestDataFunction: new lambda.Function(this, 'PlaceholderGenerateTestData', {
-        runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => ({ statusCode: 200, body: "Placeholder" });'),
-      }),
-      getEventsFunction: new lambda.Function(this, 'PlaceholderGetEvents', {
-        runtime: RUNTIME_CONFIG.LAMBDA_RUNTIME,
-        handler: 'index.handler',
-        code: lambda.Code.fromInline('exports.handler = async () => ({ statusCode: 200, body: "Placeholder" });'),
-      }),
+      // Admin Functions - Now using real functions instead of placeholders
+      listUsersFunction: adminFunctions.listUsersFunction,
+      deleteUserFunction: adminFunctions.deleteUserFunction,
+      cleanupAllFunction: adminFunctions.cleanupAllFunction,
+      generateTestDataFunction: adminFunctions.generateTestDataFunction,
+      getEventsFunction: adminFunctions.getEventsFunction,
 
       // Data Service Functions
       postsDataServiceFunction,
       profilesDataServiceFunction,
-    });
-
-    // Admin Functions - Created after API Gateway to access URL
-    const adminFunctions = new AdminFunctions(this, 'AdminFunctions', {
-      table: dataLayer.table,
-      eventBus: dataLayer.eventBus,
-      imagesBucket: dataLayer.imagesBucket,
-      apiUrl: apiGateway.api.url,
     });
 
     // Event Processing Functions - Created after API Gateway to access URL
