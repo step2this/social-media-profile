@@ -1,9 +1,7 @@
-import fetch from 'node-fetch';
+import { ProfileData, PostData, createSuccessResponse, createErrorResponse, createValidationError, handleOptionsRequest } from '../shared/index.mjs';
 
 // Pre-warm the connections with top-level await
 await Promise.resolve();
-
-const API_BASE_URL = process.env.API_BASE_URL;
 
 // Random test data arrays
 const firstNames = [
@@ -68,52 +66,31 @@ const generateUsername = (firstName, lastName) => {
   return getRandomElement(variants);
 };
 
-// Helper function to make API calls
-const makeApiCall = async (endpoint, method, body) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`API call failed: ${response.status} ${response.statusText} - ${errorText}`);
-  }
-
-  return response.json();
-};
-
 export const handler = async (event) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-  };
-
   try {
-    if (event.httpMethod === 'OPTIONS') {
-      return { statusCode: 200, headers, body: '' };
+    if (handleOptionsRequest(event)) {
+      return handleOptionsRequest(event);
     }
 
     const { userCount = '5', postsPerUser = '3' } = event.queryStringParameters || {};
     const numUsers = Math.min(parseInt(userCount), 20); // Limit to 20 users
     const numPostsPerUser = Math.min(parseInt(postsPerUser), 10); // Limit to 10 posts per user
 
+    if (isNaN(numUsers) || isNaN(numPostsPerUser) || numUsers < 1 || numPostsPerUser < 1) {
+      return createValidationError('Invalid userCount or postsPerUser parameters');
+    }
+
     const createdUsers = [];
     let totalPostsCreated = 0;
 
-    // Generate users and posts using API endpoints
+    // Generate users and posts using data layer
     for (let i = 0; i < numUsers; i++) {
       const firstName = getRandomElement(firstNames);
       const lastName = getRandomElement(lastNames);
       const displayName = `${firstName} ${lastName}`;
       const username = generateUsername(firstName, lastName);
 
-      // Create user via API
+      // Create user via ProfileData
       const userPayload = {
         username,
         displayName,
@@ -123,7 +100,7 @@ export const handler = async (event) => {
         isVerified: Math.random() > 0.8, // 20% chance of being verified
       };
 
-      const createdUser = await makeApiCall('/profiles', 'POST', userPayload);
+      const createdUser = await ProfileData.createProfile(userPayload);
 
       createdUsers.push({
         userId: createdUser.userId,
@@ -132,50 +109,31 @@ export const handler = async (event) => {
         postsCount: numPostsPerUser,
       });
 
-      // Generate posts for this user via API
+      // Generate posts for this user via PostData
       for (let j = 0; j < numPostsPerUser; j++) {
         const postPayload = {
           content: getRandomElement(posts),
           imageUrl: '', // No images for now
         };
 
-        // Note: We need to pass userId in the request somehow
-        // This depends on how the create post endpoint is implemented
-        await makeApiCall('/posts', 'POST', {
-          ...postPayload,
-          userId: createdUser.userId,
-        });
-
+        await PostData.createPost(createdUser.userId, postPayload);
         totalPostsCreated++;
       }
     }
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        message: 'Test data generated successfully',
-        summary: {
-          usersCreated: createdUsers.length,
-          postsCreated: totalPostsCreated,
-          totalItems: createdUsers.length + totalPostsCreated,
-        },
-        users: createdUsers,
-        timestamp: new Date().toISOString(),
-      }),
-    };
+    return createSuccessResponse({
+      message: 'Test data generated successfully',
+      summary: {
+        usersCreated: createdUsers.length,
+        postsCreated: totalPostsCreated,
+        totalItems: createdUsers.length + totalPostsCreated,
+      },
+      users: createdUsers,
+      timestamp: new Date().toISOString(),
+    });
 
   } catch (error) {
     console.error('Error generating test data:', error);
-
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: 'Failed to generate test data',
-        message: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      }),
-    };
+    return createErrorResponse('Failed to generate test data', error);
   }
 };

@@ -1,52 +1,34 @@
-// lambda/admin-esm/get-events.mjs
+import { createSuccessResponse, createErrorResponse, createValidationError, handleOptionsRequest } from '../shared/index.mjs';
 
 // Pre-warm the connections with top-level await
 await Promise.resolve();
 
 export const handler = async (event) => {
-  const headers = {
-    'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key',
-    'Access-Control-Allow-Methods': 'OPTIONS,GET'
-  };
-
   try {
-    if (event.httpMethod === 'OPTIONS') {
-      return { statusCode: 200, headers, body: '' };
+    if (handleOptionsRequest(event)) {
+      return handleOptionsRequest(event);
     }
 
     const { limit = '50', nextToken } = event.queryStringParameters || {};
     const limitNum = Math.min(parseInt(limit) || 50, 100); // Cap at 100
 
+    if (isNaN(limitNum) || limitNum < 1) {
+      return createValidationError('Invalid limit parameter');
+    }
+
     // For demo purposes, generate sample events
     // In production, you could integrate with CloudWatch Logs or store events in DynamoDB
     const events = generateSampleEvents(limitNum);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        events,
-        totalEvents: events.length,
-        nextToken: events.length >= limitNum ? `page-${Date.now()}` : undefined,
-      }),
-    };
+    return createSuccessResponse({
+      events,
+      totalEvents: events.length,
+      nextToken: events.length >= limitNum ? `page-${Date.now()}` : undefined,
+    });
 
   } catch (error) {
     console.error('Error getting events:', error);
-
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        events: [],
-        totalEvents: 0,
-      }),
-    };
+    return createErrorResponse('Failed to get events', error);
   }
 };
 

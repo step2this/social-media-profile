@@ -1,52 +1,24 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
-
-const dynamoClient = new DynamoDBClient({
-  maxAttempts: 3,
-  retryMode: 'adaptive',
-});
-
-const docClient = DynamoDBDocumentClient.from(dynamoClient, {
-  marshallOptions: {
-    removeUndefinedValues: true,
-  },
-});
+import { ProfileData, createSuccessResponse, createErrorResponse, createValidationError, handleOptionsRequest } from '../shared/index.mjs';
 
 // Pre-warm the connections with top-level await
 await Promise.resolve();
 
-const TABLE_NAME = process.env.TABLE_NAME;
-
 export const handler = async (event) => {
-  console.log('Event:', JSON.stringify(event, null, 2));
-
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
-  };
-
   try {
-    if (event.httpMethod === 'OPTIONS') {
-      return { statusCode: 200, headers, body: '' };
+    if (handleOptionsRequest(event)) {
+      return handleOptionsRequest(event);
     }
 
     const { page = '1', limit = '10' } = event.queryStringParameters || {};
     const pageNumber = parseInt(page);
     const pageLimit = parseInt(limit);
 
-    // Scan for all users (PROFILE items only)
-    const scanParams = {
-      TableName: TABLE_NAME,
-      FilterExpression: 'SK = :sk',
-      ExpressionAttributeValues: {
-        ':sk': 'PROFILE',
-      },
-    };
+    if (isNaN(pageNumber) || isNaN(pageLimit) || pageNumber < 1 || pageLimit < 1 || pageLimit > 100) {
+      return createValidationError('Invalid pagination parameters');
+    }
 
-    const result = await docClient.send(new ScanCommand(scanParams));
-    const users = result.Items || [];
+    // Get all users through ProfileData
+    const users = await ProfileData.getAllProfiles();
 
     // Sort by creation date (newest first)
     users.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -58,30 +30,20 @@ export const handler = async (event) => {
     const endIndex = startIndex + pageLimit;
     const paginatedUsers = users.slice(startIndex, endIndex);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        users: paginatedUsers,
-        pagination: {
-          currentPage: pageNumber,
-          totalPages,
-          totalUsers,
-          pageSize: pageLimit,
-          hasNextPage: pageNumber < totalPages,
-          hasPreviousPage: pageNumber > 1,
-        },
-      }),
-    };
+    return createSuccessResponse({
+      users: paginatedUsers,
+      pagination: {
+        currentPage: pageNumber,
+        totalPages,
+        totalUsers,
+        pageSize: pageLimit,
+        hasNextPage: pageNumber < totalPages,
+        hasPreviousPage: pageNumber > 1,
+      },
+    });
+
   } catch (error) {
     console.error('Error listing users:', error);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-    };
+    return createErrorResponse('Failed to list users', error);
   }
 };

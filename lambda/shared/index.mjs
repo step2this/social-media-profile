@@ -7,3 +7,4 @@ export * from './post-data.mjs';
 export * from './like-data.mjs';
 export * from './follow-data.mjs';
 export * from './feed-data.mjs';
+export * from './admin-data.mjs';

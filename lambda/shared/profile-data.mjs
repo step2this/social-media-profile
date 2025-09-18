@@ -1,5 +1,6 @@
-import { GetCommand, PutCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, UpdateCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, TABLE_NAME } from './clients.mjs';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Profile data access operations
@@ -39,11 +40,12 @@ export class ProfileData {
    * Create a new profile
    */
   static async createProfile(profileData) {
+    const userId = profileData.userId || uuidv4();
     const timestamp = new Date().toISOString();
     const profile = {
-      PK: `USER#${profileData.userId}`,
+      PK: `USER#${userId}`,
       SK: 'PROFILE',
-      userId: profileData.userId,
+      userId: userId,
       username: profileData.username,
       email: profileData.email,
       displayName: profileData.displayName,
@@ -52,8 +54,8 @@ export class ProfileData {
       followersCount: 0,
       followingCount: 0,
       postsCount: 0,
-      isVerified: false,
-      isPrivate: false,
+      isVerified: profileData.isVerified || false,
+      isPrivate: profileData.isPrivate || false,
       createdAt: timestamp,
       updatedAt: timestamp,
     };
@@ -127,6 +129,20 @@ export class ProfileData {
       UpdateExpression: `ADD ${updateExpressions.join(', ')}`,
       ExpressionAttributeValues: expressionAttributeValues,
     }));
+  }
+
+  /**
+   * Get all profiles (for admin use)
+   */
+  static async getAllProfiles() {
+    const result = await docClient.send(new ScanCommand({
+      TableName: TABLE_NAME,
+      FilterExpression: 'SK = :sk',
+      ExpressionAttributeValues: {
+        ':sk': 'PROFILE',
+      },
+    }));
+    return result.Items || [];
   }
 
   /**
