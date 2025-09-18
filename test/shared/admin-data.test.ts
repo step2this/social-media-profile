@@ -1,4 +1,4 @@
-import { AdminData } from '../../lambda/shared/admin-data.mjs';
+import { AdminData } from '../../lambda/shared/admin-data';
 import { QueryCommand, DeleteCommand, TransactWriteCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
 
