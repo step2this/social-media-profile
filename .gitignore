@@ -1,8 +1,17 @@
 *.js
 !jest.config.js
+!web-ui/tailwind.config.js
+!web-ui/craco.config.js
+!web-ui/postcss.config.js
 *.d.ts
+*.d.ts.map
 node_modules
 
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# TypeScript compilation artifacts
+**/*.d.ts
+**/*.d.ts.map
+**/*.js.map

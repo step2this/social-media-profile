@@ -40,8 +40,10 @@ export class ProfileData {
     return { success: true, deletedUserId: userId };
   }
 
-  static async getPublicProfile(profile: any) {
-    if (!profile) return null;
+  static getPublicProfile(profile: any) {
+    if (!profile || profile === null || profile === undefined) {
+      return null;
+    }
 
     // Remove sensitive fields
     const { email, ...publicProfile } = profile;
