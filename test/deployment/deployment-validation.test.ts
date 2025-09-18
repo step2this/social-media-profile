@@ -131,7 +131,7 @@ describe('Deployment Validation Tests', () => {
       }));
 
       // Find admin endpoints
-      const adminPaths = resources.items?.filter(item =>
+      const adminPaths = resources.items?.filter((item: any) =>
         item.path?.includes('/admin')
       ) || [];
 
@@ -170,7 +170,7 @@ describe('Deployment Validation Tests', () => {
       const stack = stackDescription.Stacks?.[0];
       const outputs = stack?.Outputs || [];
 
-      const apiUrlOutput = outputs.find(output =>
+      const apiUrlOutput = outputs.find((output: any) =>
         output.OutputKey?.includes('ApiUrl') || output.OutputKey?.includes('ApiEndpoint')
       );
 

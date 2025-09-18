@@ -49,7 +49,7 @@ describe('API Contract Tests', () => {
       expect(response.status).toBe(200);
       expect(response.headers.get('content-type')).toContain('application/json');
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       // Should not be a simple string (like "Placeholder")
       expect(typeof data).toBe('object');
@@ -106,7 +106,7 @@ describe('API Contract Tests', () => {
       const response = await fetch(`${API_BASE_URL}admin/users?page=1&limit=5`);
 
       expect(response.status).toBe(200);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       expect(data.pagination.currentPage).toBe(1);
       expect(data.pagination.pageSize).toBe(5);
@@ -140,7 +140,7 @@ describe('API Contract Tests', () => {
     test('should return proper error format for invalid requests', async () => {
       const response = await fetch(`${API_BASE_URL}admin/users?page=invalid`);
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       // Should have error structure
       expect(data).toHaveProperty('message');
@@ -163,7 +163,7 @@ describe('API Contract Tests', () => {
   describe('Data Consistency Validation', () => {
     test('user data should be internally consistent', async () => {
       const response = await fetch(`${API_BASE_URL}admin/users`);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (data.users && data.users.length > 0) {
         data.users.forEach((user: UserProfile) => {

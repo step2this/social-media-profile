@@ -1,4 +1,4 @@
-import { ProfileData } from '../../lambda/shared/profile-data';
+import { ProfileData } from '../../lambda/shared/profile-data.mjs';
 import { GetCommand, PutCommand, UpdateCommand, QueryCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
 // Mock the AWS SDK

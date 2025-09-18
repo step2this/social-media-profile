@@ -3,7 +3,7 @@ import { mockClient } from 'aws-sdk-client-mock';
 
 // Integration tests for API endpoints
 describe('API Endpoints Integration Tests', () => {
-  const API_BASE_URL = process.env.API_BASE_URL || 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod';
+  const API_BASE_URL = process.env.API_BASE_URL || 'https://px21il00t5.execute-api.us-east-1.amazonaws.com/prod/';
 
   // Mock DynamoDB for integration tests
   const ddbMock = mockClient(DynamoDBDocumentClient);

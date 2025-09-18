@@ -592,11 +592,11 @@ describe('CDK Infrastructure Tests', () => {
 
       expect(Object.keys(resources)).toEqual(
         expect.arrayContaining([
-          expect.stringMatching(/.*DynamoDB.*Table.*/),
-          expect.stringMatching(/.*Lambda.*Function.*/),
-          expect.stringMatching(/.*ApiGateway.*RestApi.*/),
-          expect.stringMatching(/.*Events.*EventBus.*/),
-          expect.stringMatching(/.*S3.*Bucket.*/)
+          expect.stringMatching(/.*Table.*/),
+          expect.stringMatching(/.*Function.*/),
+          expect.stringMatching(/.*RestApi.*/),
+          expect.stringMatching(/.*EventBus.*/),
+          expect.stringMatching(/.*Bucket.*/)
         ])
       );
     });

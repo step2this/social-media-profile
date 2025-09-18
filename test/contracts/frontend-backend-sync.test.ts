@@ -15,7 +15,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
   describe('User Profile API Sync', () => {
     test('API response matches frontend UserProfile interface', async () => {
       const response = await fetch(`${API_BASE_URL}admin/users`);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (data.users && data.users.length > 0) {
         const user = data.users[0];
@@ -52,7 +52,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
 
     test('Pagination response matches frontend PaginatedUsersResponse interface', async () => {
       const response = await fetch(`${API_BASE_URL}admin/users?page=1&limit=5`);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       // Root structure
       expect(data).toHaveProperty('users');
@@ -93,7 +93,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
       const response = await fetch(`${API_BASE_URL}admin/users?page=invalid`);
 
       if (response.status >= 400) {
-        const errorData = await response.json();
+        const errorData = await response.json() as any;
 
         // Error response should have message field
         expect(errorData).toHaveProperty('message');
@@ -115,7 +115,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
       const response = await fetch(`${API_BASE_URL}admin/nonexistent-endpoint`);
 
       if (response.status === 404) {
-        const errorData = await response.json();
+        const errorData = await response.json() as any;
         expect(errorData).toHaveProperty('message');
         expect(errorData.message).not.toBe('Placeholder');
       }
@@ -135,7 +135,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
         })
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       // Should not be a simple string
       expect(typeof data).toBe('object');
@@ -153,7 +153,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
       });
 
       if (response.status < 500) { // Exclude server errors
-        const data = await response.json();
+        const data = await response.json() as any;
 
         expect(typeof data).toBe('object');
         expect(data).not.toBe(null);
@@ -193,7 +193,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
   describe('Data Format Consistency', () => {
     test('Date formats are ISO 8601 strings', async () => {
       const response = await fetch(`${API_BASE_URL}admin/users`);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (data.users && data.users.length > 0) {
         data.users.forEach((user: any) => {
@@ -211,7 +211,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
 
     test('Numeric fields are consistent types', async () => {
       const response = await fetch(`${API_BASE_URL}admin/users`);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (data.users && data.users.length > 0) {
         data.users.forEach((user: any) => {
@@ -233,7 +233,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
 
     test('Boolean fields are actual booleans', async () => {
       const response = await fetch(`${API_BASE_URL}admin/users`);
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (data.users && data.users.length > 0) {
         data.users.forEach((user: any) => {
@@ -261,7 +261,7 @@ describe('Frontend-Backend Synchronization Tests', () => {
 
       if (!versionHeader) {
         // Version might be in response body
-        const data = await response.json();
+        const data = await response.json() as any;
         // This is optional, but good practice
         if (data.metadata) {
           expect(data.metadata).toHaveProperty('version');

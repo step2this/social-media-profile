@@ -6,7 +6,7 @@ describe('Admin Integration Tests', () => {
 
   beforeAll(() => {
     // Use the actual API URL from environment or default
-    apiUrl = process.env.API_URL || 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod';
+    apiUrl = process.env.API_URL || 'https://px21il00t5.execute-api.us-east-1.amazonaws.com/prod/';
   });
 
   const makeApiRequest = async (
@@ -216,7 +216,7 @@ describe('EventBridge Events', () => {
   let apiUrl: string;
 
   beforeAll(() => {
-    apiUrl = process.env.API_URL || 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod';
+    apiUrl = process.env.API_URL || 'https://px21il00t5.execute-api.us-east-1.amazonaws.com/prod/';
   });
 
   const makeApiRequest = async (endpoint: string, options: RequestInit = {}): Promise<any> => {
@@ -316,7 +316,7 @@ describe('Social Features Integration', () => {
   let testUsers: any[] = [];
 
   beforeAll(async () => {
-    apiUrl = process.env.API_URL || 'https://348y3w30hk.execute-api.us-east-1.amazonaws.com/prod';
+    apiUrl = process.env.API_URL || 'https://px21il00t5.execute-api.us-east-1.amazonaws.com/prod/';
 
     // Generate test users for social feature testing
     const result = await fetch(`${apiUrl}/admin/test-data?userCount=3&postsPerUser=2`, {
