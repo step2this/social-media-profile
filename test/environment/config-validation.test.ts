@@ -183,8 +183,8 @@ describe('Environment Configuration Tests', () => {
 
       apiUrlKeys.forEach(key => {
         const apiUrl = stackOutputs[key];
-        expect(apiUrl).toStartWith('https://');
-        expect(apiUrl).not.toStartWith('http://'); // No insecure HTTP
+        expect(apiUrl).toMatch(/^https:\/\//);
+        expect(apiUrl).not.toMatch(/^http:\/\//); // No insecure HTTP
       });
     });
 
