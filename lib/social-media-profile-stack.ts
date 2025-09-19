@@ -623,7 +623,7 @@ export class ProfileServiceStack extends cdk.Stack {
     const distribution = new cloudfront.Distribution(this, 'WebAppDistribution', {
       defaultRootObject: 'index.html',
       defaultBehavior: {
-        origin: new origins.S3Origin(webAppBucket, {
+        origin: new origins.S3BucketOrigin(webAppBucket, {
           originAccessIdentity,
         }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,

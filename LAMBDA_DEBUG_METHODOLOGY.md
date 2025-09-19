@@ -69,18 +69,21 @@ aws lambda invoke \
   response.json && cat response.json
 ```
 
-#### 2.3 Incremental API Gateway Testing with curl
-```bash
-# Start with GET requests (usually simpler)
-curl -v "https://API_URL/endpoint"
+#### 2.3 Test with Actual Frontend (Preferred) vs curl
+**✅ Preferred: Use actual frontend** - Tests real user flow with Zod validation
+- Frontend uses same schemas and API client as production
+- Catches frontend-specific edge cases and validation issues
+- Tests the complete integration pipeline
 
-# Test POST with minimal valid payload
+**⚠️ curl for quick verification only** - Manual JSON bypasses validation
+```bash
+# Only for quick API health checks
 curl -X POST "https://API_URL/profiles" \
   -H "Content-Type: application/json" \
   -d '{"username":"test","email":"test@example.com","displayName":"Test"}'
-
-# Gradually add complexity to requests
 ```
+
+**Remember**: curl can't guarantee data matches what frontend sends due to Zod schemas
 
 #### 2.4 Correlate HTTP Errors with Lambda Logs
 - Run curl command in one terminal
@@ -88,14 +91,30 @@ curl -X POST "https://API_URL/profiles" \
 - Match request timestamps with log entries
 - Identify exact failure points (permissions, validation, database, etc.)
 
+### Smart CDK Deployment Strategy
+
+**The nuanced approach to deployments during debugging:**
+
+1. **Prefer non-deployment debugging first** - Use logs, direct function testing, dependency verification
+2. **Deploy when you've identified and fixed the actual issue** - Targeted deployments after systematic analysis
+3. **Avoid random/exploratory deployments** - No guess-and-check anti-pattern
+4. **Deploy for code/dependency changes** - Local fixes always require deployment to take effect
+
+**Deployment Decision Tree:**
+- Infrastructure issues (permissions, resources) → Debug without deployment first
+- Code/dependency issues → Fix locally, then deploy targeted changes
+- Configuration issues → Try environment variable changes via AWS console first
+- Unknown issues → Complete Phase 1 analysis before any deployment
+
 ### Best Practices
 
-1. **Avoid CDK deployments during debugging** - they're slow and may introduce new issues
+1. **Use our debugging scripts first** - `./scripts/get-lambda-logs.sh` and `./scripts/verify-lambda-deps.sh`
 2. **Use curl scripts for consistent testing** - saves time and ensures reproducible tests
 3. **Monitor logs in real-time** - provides immediate feedback on failures
 4. **Test functions directly first** - isolates Lambda issues from API Gateway issues
 5. **Start with minimal payloads** - reduces variables when isolating problems
 6. **One change at a time** - systematic approach prevents confusion
+7. **Always check our MD docs** - CLAUDE.md, debugging methodology, and ESM best practices
 
 ### Common Issues to Check
 
