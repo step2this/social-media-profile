@@ -151,3 +151,102 @@ export function createProfileResponse(profile) {
     createdAt: profile.createdAt,
   };
 }
+
+/**
+ * Posts domain schemas and validation
+ */
+
+/**
+ * Create post request validation schema
+ */
+export const CreatePostRequestSchema = {
+  type: 'object',
+  required: ['userId', 'content'],
+  properties: {
+    userId: {
+      type: 'string',
+      minLength: 1,
+      message: 'User ID is required'
+    },
+    content: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 2000,
+      message: 'Content is required and must be 1-2000 characters'
+    },
+    imageUrl: {
+      type: 'string',
+      format: 'url',
+      optional: true,
+      message: 'Image URL must be a valid URL'
+    }
+  }
+};
+
+/**
+ * Post response schema - what server returns
+ */
+export const PostResponseSchema = {
+  type: 'object',
+  required: [
+    'postId', 'userId', 'username', 'displayName', 'content',
+    'likesCount', 'commentsCount', 'createdAt'
+  ],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    userId: { type: 'string', minLength: 1 },
+    username: { type: 'string', minLength: 1, maxLength: 50 },
+    displayName: { type: 'string', minLength: 1, maxLength: 100 },
+    avatar: { type: 'string' },
+    content: { type: 'string', minLength: 1, maxLength: 2000 },
+    imageUrl: { type: 'string' },
+    likesCount: { type: 'number', minimum: 0 },
+    commentsCount: { type: 'number', minimum: 0 },
+    createdAt: { type: 'string', format: 'date-time' }
+  }
+};
+
+/**
+ * Simple validation function for create post request
+ */
+export function validateCreatePostRequest(data) {
+  const errors = [];
+
+  if (!data.userId || typeof data.userId !== 'string' || data.userId.length === 0) {
+    errors.push('User ID is required');
+  }
+
+  if (!data.content || typeof data.content !== 'string' || data.content.length === 0) {
+    errors.push('Content is required');
+  }
+  if (data.content && data.content.length > 2000) {
+    errors.push('Content must be 2000 characters or less');
+  }
+
+  if (data.imageUrl && data.imageUrl !== '' && !isValidUrl(data.imageUrl)) {
+    errors.push('Image URL must be a valid URL');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Create a clean post response object
+ */
+export function createPostResponse(post) {
+  return {
+    postId: post.postId,
+    userId: post.userId,
+    username: post.username,
+    displayName: post.displayName,
+    avatar: post.avatar || '',
+    content: post.content,
+    imageUrl: post.imageUrl || '',
+    likesCount: post.likesCount || 0,
+    commentsCount: post.commentsCount || 0,
+    createdAt: post.createdAt,
+  };
+}

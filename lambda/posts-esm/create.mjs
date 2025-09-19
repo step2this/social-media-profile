@@ -1,6 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
+import { validateCreatePostRequest, createPostResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -45,18 +46,25 @@ const makeApiCall = async (endpoint, method, body) => {
 
 export const handler = async (event) => {
   try {
-    const { userId, content, imageUrl } = JSON.parse(event.body || '{}');
+    const request = JSON.parse(event.body || '{}');
 
-    if (!userId || !content) {
+    // Validate request using shared schema
+    const validation = validateCreatePostRequest(request);
+    if (!validation.isValid) {
       return {
         statusCode: 400,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ error: 'Missing userId or content' }),
+        body: JSON.stringify({
+          error: 'Validation failed',
+          details: validation.errors
+        }),
       };
     }
+
+    const { userId, content, imageUrl } = request;
 
     // Get user profile for post metadata
     const profileResult = await docClient.send(new GetCommand({

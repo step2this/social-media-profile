@@ -5,15 +5,14 @@
  * Uses constants and structured data for consistent testing.
  */
 
-import { type Profile, type CreateProfileRequest, type UpdateProfileRequest } from '../../src/schemas/profile';
+import { type ProfileResponse, type CreateProfileRequest, type UpdateProfileRequest } from '../../src/schemas/shared-schemas';
 
 /**
- * Valid profile test fixture
+ * Valid profile response test fixture - matches server response format
  */
-export const VALID_PROFILE: Profile = {
+export const VALID_PROFILE: ProfileResponse = {
   userId: 'test-user-123',
   username: 'testuser',
-  email: 'test@example.com',
   displayName: 'Test User',
   bio: 'A test user for testing purposes',
   avatar: 'https://example.com/avatar.jpg',
@@ -23,7 +22,6 @@ export const VALID_PROFILE: Profile = {
   isVerified: false,
   isPrivate: false,
   createdAt: '2023-01-15T10:30:00Z',
-  updatedAt: '2023-02-01T14:15:00Z',
 } as const;
 
 /**

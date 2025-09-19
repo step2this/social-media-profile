@@ -7,11 +7,11 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  validateProfile,
+  validateProfileResponse,
   validateCreateRequest,
   validateUpdateRequest,
   validateApiError
-} from '../../../src/schemas/profile';
+} from '../../../src/schemas/shared-schemas';
 import {
   VALID_PROFILE,
   VALID_CREATE_REQUEST,
@@ -21,31 +21,25 @@ import {
 } from '../../fixtures/profile-fixtures';
 
 describe('Profile Schema Validation', () => {
-  describe('validateProfile', () => {
-    it('should validate a valid profile successfully', () => {
+  describe('validateProfileResponse', () => {
+    it('should validate a valid profile response successfully', () => {
       // Arrange-Act-Assert pattern
-      const result = validateProfile(VALID_PROFILE);
+      const result = validateProfileResponse(VALID_PROFILE);
 
       expect(result).toEqual(VALID_PROFILE);
       expect(result.userId).toBe('test-user-123');
       expect(result.followersCount).toBe(42);
     });
 
-    it('should reject profile with missing required fields', () => {
-      expect(() => validateProfile({})).toThrow();
-      expect(() => validateProfile({ username: 'test' })).toThrow();
+    it('should reject profile response with missing required fields', () => {
+      expect(() => validateProfileResponse({})).toThrow();
+      expect(() => validateProfileResponse({ username: 'test' })).toThrow();
     });
 
-    it('should reject profile with invalid email format', () => {
-      const invalidProfile = { ...VALID_PROFILE, email: 'invalid-email' };
-
-      expect(() => validateProfile(invalidProfile)).toThrow();
-    });
-
-    it('should reject profile with negative counts', () => {
+    it('should reject profile response with negative counts', () => {
       const invalidProfile = { ...VALID_PROFILE, followersCount: -1 };
 
-      expect(() => validateProfile(invalidProfile)).toThrow();
+      expect(() => validateProfileResponse(invalidProfile)).toThrow();
     });
   });
 

@@ -56,7 +56,7 @@ describe('Profile API Client', () => {
 
     it('should validate response data', async () => {
       // Arrange
-      const invalidResponse = { ...VALID_PROFILE, email: 'invalid-email' };
+      const invalidResponse = { ...VALID_PROFILE, followersCount: -1 }; // Invalid negative count
       const mockResponse = {
         json: vi.fn().mockResolvedValue(invalidResponse),
       };
