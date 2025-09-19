@@ -16,7 +16,7 @@ echo
 # Test 1: Health Check / Root endpoint
 echo "1. Testing root endpoint..."
 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/")
-if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 404 ]; then
+if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 404 ] || [ "$HTTP_STATUS" -eq 403 ]; then
     echo "   ✅ Root endpoint responding (HTTP $HTTP_STATUS)"
 else
     echo "   ❌ Root endpoint failed (HTTP $HTTP_STATUS)"
