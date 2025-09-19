@@ -17,11 +17,12 @@ import {
   AlertTriangle,
   CheckCircle,
   Home,
-  MessageSquare
+  MessageSquare,
+  User
 } from 'lucide-react';
 import { adminService } from '@/services/admin';
 import { apiService } from '@/services/api';
-import { FeedItem } from '@/types/profile';
+import { FeedItem, CreateProfileRequest } from '@/types/profile';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +33,12 @@ export const HomePage: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [testUserCount, setTestUserCount] = useState(5);
   const [testPostsPerUser, setTestPostsPerUser] = useState(3);
+  const [profileForm, setProfileForm] = useState<CreateProfileRequest>({
+    username: '',
+    email: '',
+    displayName: '',
+    bio: '',
+  });
 
   const loadFeed = async () => {
     if (!currentUser) return;
@@ -82,6 +89,36 @@ export const HomePage: React.FC = () => {
       if (currentUser) loadFeed();
     } catch (error) {
       setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to generate test data' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCreateProfile = async () => {
+    if (!profileForm.username || !profileForm.email || !profileForm.displayName) {
+      setMessage({ type: 'error', text: 'Username, email, and display name are required' });
+      return;
+    }
+
+    try {
+      setActionLoading('create');
+      const newProfile = await apiService.createProfile(profileForm);
+      setMessage({
+        type: 'success',
+        text: `Profile created: ${newProfile.displayName} (@${newProfile.username})`
+      });
+
+      setProfileForm({
+        username: '',
+        email: '',
+        displayName: '',
+        bio: '',
+      });
+
+      await refreshUsers();
+      if (currentUser) loadFeed();
+    } catch (error) {
+      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to create profile' });
     } finally {
       setActionLoading(null);
     }
@@ -195,6 +232,75 @@ export const HomePage: React.FC = () => {
                   <Plus className="w-3 h-3 mr-2" />
                 )}
                 Generate Data
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Create User Profile */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Create User Profile
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <Label htmlFor="username" className="text-xs">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="john_doe"
+                  value={profileForm.username}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, username: e.target.value }))}
+                  className="h-8"
+                />
+              </div>
+              <div>
+                <Label htmlFor="email" className="text-xs">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="h-8"
+                />
+              </div>
+              <div>
+                <Label htmlFor="displayName" className="text-xs">Display Name</Label>
+                <Input
+                  id="displayName"
+                  type="text"
+                  placeholder="John Doe"
+                  value={profileForm.displayName}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, displayName: e.target.value }))}
+                  className="h-8"
+                />
+              </div>
+              <div>
+                <Label htmlFor="bio" className="text-xs">Bio (optional)</Label>
+                <Input
+                  id="bio"
+                  type="text"
+                  placeholder="A short bio..."
+                  value={profileForm.bio}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, bio: e.target.value }))}
+                  className="h-8"
+                />
+              </div>
+              <Button
+                onClick={handleCreateProfile}
+                disabled={actionLoading === 'create'}
+                className="w-full h-8 text-xs"
+                size="sm"
+              >
+                {actionLoading === 'create' ? (
+                  <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                ) : (
+                  <User className="w-3 h-3 mr-2" />
+                )}
+                Create Profile
               </Button>
             </CardContent>
           </Card>

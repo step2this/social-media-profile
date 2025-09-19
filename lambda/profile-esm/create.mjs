@@ -26,6 +26,7 @@ await Promise.resolve();
 const TABLE_NAME = process.env.TABLE_NAME;
 const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME;
 
+// TODO let's get rid of this kludgey handcrafted JSON and use a library instead
 export const handler = async (event) => {
   try {
     if (!event.body) {
