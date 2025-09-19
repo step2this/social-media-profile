@@ -6,6 +6,8 @@
  */
 
 import { useState } from 'react';
+import { CreateProfileRequestSchema } from '../schemas/profile';
+import { ZodError } from 'zod';
 
 /**
  * Form state interface
@@ -17,11 +19,23 @@ interface FormState {
 }
 
 /**
+ * Validation errors interface
+ */
+interface ValidationErrors {
+  username?: string;
+  email?: string;
+  displayName?: string;
+}
+
+/**
  * Hook return interface
  */
 interface UseCreateProfileFormReturn {
   formData: FormState;
+  errors: ValidationErrors;
   updateField: (field: keyof FormState, value: string) => void;
+  validateField: (field: keyof FormState) => void;
+  validateForm: () => boolean;
   resetForm: () => void;
 }
 
@@ -41,15 +55,68 @@ const INITIAL_STATE: FormState = {
  */
 export const useCreateProfileForm = (): UseCreateProfileFormReturn => {
   const [formData, setFormData] = useState<FormState>(INITIAL_STATE);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   /**
-   * Update a single form field
+   * Update a single form field and clear its error
    */
   const updateField = (field: keyof FormState, value: string): void => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  /**
+   * Validate a single field using Zod
+   */
+  const validateField = (field: keyof FormState): void => {
+    try {
+      CreateProfileRequestSchema.pick({ [field]: true }).parse(formData);
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const fieldError = error.errors.find(err => err.path[0] === field);
+        if (fieldError) {
+          setErrors(prev => ({
+            ...prev,
+            [field]: fieldError.message,
+          }));
+        }
+      }
+    }
+  };
+
+  /**
+   * Validate entire form and return whether it's valid
+   */
+  const validateForm = (): boolean => {
+    try {
+      CreateProfileRequestSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const newErrors: ValidationErrors = {};
+        error.errors.forEach(err => {
+          const field = err.path[0] as keyof FormState;
+          newErrors[field] = err.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
+    }
   };
 
   /**
@@ -57,11 +124,15 @@ export const useCreateProfileForm = (): UseCreateProfileFormReturn => {
    */
   const resetForm = (): void => {
     setFormData(INITIAL_STATE);
+    setErrors({});
   };
 
   return {
     formData,
+    errors,
     updateField,
+    validateField,
+    validateForm,
     resetForm,
   };
 };

@@ -13,11 +13,15 @@ import { FormField } from '../forms/FormField';
  * CreateProfileForm component
  */
 export const CreateProfileForm: React.FC = () => {
-  const { formData, updateField, resetForm } = useCreateProfileForm();
+  const { formData, errors, updateField, validateField, validateForm, resetForm } = useCreateProfileForm();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    if (validateForm()) {
+      console.log('Form submitted with valid data:', formData);
+    } else {
+      console.log('Form validation failed');
+    }
   };
 
   return (
@@ -29,6 +33,7 @@ export const CreateProfileForm: React.FC = () => {
         label="Username"
         value={formData.username}
         onChange={(value) => updateField('username', value)}
+        error={errors.username}
         required
         placeholder="Choose a unique username"
       />
@@ -39,6 +44,7 @@ export const CreateProfileForm: React.FC = () => {
         type="email"
         value={formData.email}
         onChange={(value) => updateField('email', value)}
+        error={errors.email}
         required
         placeholder="your.email@example.com"
       />
@@ -48,6 +54,7 @@ export const CreateProfileForm: React.FC = () => {
         label="Display Name"
         value={formData.displayName}
         onChange={(value) => updateField('displayName', value)}
+        error={errors.displayName}
         required
         placeholder="How others will see your name"
       />
