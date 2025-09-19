@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { createFeedResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -55,13 +56,13 @@ export const handler = async (event) => {
 
     const feedItems = result.Items || [];
 
+    // Format response using shared helper
+    const response = createFeedResponse(feedItems, userId);
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        feedItems,
-        userId,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error('Error getting user feed:', error);

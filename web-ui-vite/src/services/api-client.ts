@@ -13,9 +13,12 @@ import {
   type UpdateProfileRequest,
   type CreatePostRequest,
   type PostResponse,
+  type GetFeedResponse,
+  type CreateFeedItemsRequest,
   validateApiError,
   validateProfileResponse,
-  validatePostResponse
+  validatePostResponse,
+  validateGetFeedResponse
 } from '../schemas/shared-schemas';
 
 /**
@@ -133,6 +136,30 @@ export const postsApi = {
   getUserPosts: async (userId: string): Promise<PostResponse[]> => {
     const response = await makeRequest<PostResponse[]>('get', `posts/user/${userId}`);
     return response.map(validatePostResponse);
+  },
+};
+
+/**
+ * Feed API endpoints using shared schemas
+ */
+export const feedApi = {
+  /**
+   * Get user's feed
+   * @param userId - User identifier
+   * @returns Promise resolving to user's feed
+   */
+  getUserFeed: async (userId: string): Promise<GetFeedResponse> => {
+    const response = await makeRequest<GetFeedResponse>('get', `feed/${userId}`);
+    return validateGetFeedResponse(response);
+  },
+
+  /**
+   * Create feed items (typically used by system processes)
+   * @param feedItemsData - Feed items to create
+   * @returns Promise resolving to success
+   */
+  createFeedItems: async (feedItemsData: CreateFeedItemsRequest): Promise<void> => {
+    await makeRequest<void>('post', 'feed/items', { json: feedItemsData });
   },
 };
 

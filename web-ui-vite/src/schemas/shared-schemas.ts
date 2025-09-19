@@ -84,6 +84,42 @@ export const PostResponseSchema = z.object({
 });
 
 /**
+ * Feed domain schemas - matches server validation exactly
+ */
+
+/**
+ * Feed item schema - represents a single item in user's feed
+ */
+export const FeedItemSchema = z.object({
+  postId: z.string().min(1, 'Post ID is required'),
+  userId: z.string().min(1, 'User ID is required'),
+  username: z.string().min(1, 'Username is required').max(50, 'Username too long'),
+  displayName: z.string().min(1, 'Display name is required').max(100, 'Display name too long'),
+  avatar: z.string(),
+  content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),
+  imageUrl: z.string(),
+  likesCount: z.number().int().min(0),
+  commentsCount: z.number().int().min(0),
+  createdAt: z.string().datetime(),
+  feedTimestamp: z.number().int().min(0),
+});
+
+/**
+ * Get feed response schema
+ */
+export const GetFeedResponseSchema = z.object({
+  feedItems: z.array(FeedItemSchema),
+  userId: z.string().min(1, 'User ID is required'),
+});
+
+/**
+ * Create feed items request schema
+ */
+export const CreateFeedItemsRequestSchema = z.object({
+  feedItems: z.array(FeedItemSchema).min(1, 'At least one feed item is required').max(25, 'Maximum 25 feed items allowed'),
+});
+
+/**
  * API error response schema
  */
 export const ApiErrorSchema = z.object({
@@ -97,6 +133,9 @@ export type ProfileResponse = z.infer<typeof ProfileResponseSchema>;
 export type UpdateProfileRequest = z.infer<typeof UpdateProfileRequestSchema>;
 export type CreatePostRequest = z.infer<typeof CreatePostRequestSchema>;
 export type PostResponse = z.infer<typeof PostResponseSchema>;
+export type FeedItem = z.infer<typeof FeedItemSchema>;
+export type GetFeedResponse = z.infer<typeof GetFeedResponseSchema>;
+export type CreateFeedItemsRequest = z.infer<typeof CreateFeedItemsRequestSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 // Validation helper functions
@@ -105,4 +144,7 @@ export const validateProfileResponse = (data: unknown): ProfileResponse => Profi
 export const validateUpdateRequest = (data: unknown): UpdateProfileRequest => UpdateProfileRequestSchema.parse(data);
 export const validateCreatePostRequest = (data: unknown): CreatePostRequest => CreatePostRequestSchema.parse(data);
 export const validatePostResponse = (data: unknown): PostResponse => PostResponseSchema.parse(data);
+export const validateFeedItem = (data: unknown): FeedItem => FeedItemSchema.parse(data);
+export const validateGetFeedResponse = (data: unknown): GetFeedResponse => GetFeedResponseSchema.parse(data);
+export const validateCreateFeedItemsRequest = (data: unknown): CreateFeedItemsRequest => CreateFeedItemsRequestSchema.parse(data);
 export const validateApiError = (data: unknown): ApiError => ApiErrorSchema.parse(data);

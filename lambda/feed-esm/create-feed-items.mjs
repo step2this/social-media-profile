@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
+import { validateCreateFeedItemsRequest } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -43,17 +44,22 @@ export const handler = async (event) => {
       };
     }
 
-    const { feedItems } = JSON.parse(event.body);
+    const request = JSON.parse(event.body);
 
-    if (!feedItems || !Array.isArray(feedItems) || feedItems.length === 0) {
+    // Validate request using shared schema
+    const validation = validateCreateFeedItemsRequest(request);
+    if (!validation.isValid) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({
-          error: 'feedItems array is required and must not be empty'
+          error: 'Validation failed',
+          details: validation.errors
         }),
       };
     }
+
+    const { feedItems } = request;
 
     // Convert to DynamoDB items
     const timestampMs = Date.parse(feedItems[0].timestamp);

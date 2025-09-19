@@ -250,3 +250,181 @@ export function createPostResponse(post) {
     createdAt: post.createdAt,
   };
 }
+
+/**
+ * Feed domain schemas and validation
+ */
+
+/**
+ * Feed item schema - represents a single item in user's feed
+ */
+export const FeedItemSchema = {
+  type: 'object',
+  required: [
+    'postId', 'userId', 'username', 'displayName', 'content',
+    'likesCount', 'commentsCount', 'createdAt', 'feedTimestamp'
+  ],
+  properties: {
+    postId: { type: 'string', minLength: 1 },
+    userId: { type: 'string', minLength: 1 },
+    username: { type: 'string', minLength: 1, maxLength: 50 },
+    displayName: { type: 'string', minLength: 1, maxLength: 100 },
+    avatar: { type: 'string' },
+    content: { type: 'string', minLength: 1, maxLength: 2000 },
+    imageUrl: { type: 'string' },
+    likesCount: { type: 'number', minimum: 0 },
+    commentsCount: { type: 'number', minimum: 0 },
+    createdAt: { type: 'string', format: 'date-time' },
+    feedTimestamp: { type: 'number', minimum: 0 }
+  }
+};
+
+/**
+ * Get feed response schema
+ */
+export const GetFeedResponseSchema = {
+  type: 'object',
+  required: ['feedItems', 'userId'],
+  properties: {
+    feedItems: {
+      type: 'array',
+      items: FeedItemSchema
+    },
+    userId: { type: 'string', minLength: 1 }
+  }
+};
+
+/**
+ * Create feed items request schema
+ */
+export const CreateFeedItemsRequestSchema = {
+  type: 'object',
+  required: ['feedItems'],
+  properties: {
+    feedItems: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 25, // DynamoDB batch write limit
+      items: FeedItemSchema
+    }
+  }
+};
+
+/**
+ * Simple validation function for feed item
+ */
+export function validateFeedItem(data) {
+  const errors = [];
+
+  if (!data.postId || typeof data.postId !== 'string' || data.postId.length === 0) {
+    errors.push('Post ID is required');
+  }
+
+  if (!data.userId || typeof data.userId !== 'string' || data.userId.length === 0) {
+    errors.push('User ID is required');
+  }
+
+  if (!data.username || typeof data.username !== 'string' || data.username.length === 0) {
+    errors.push('Username is required');
+  }
+  if (data.username && data.username.length > 50) {
+    errors.push('Username must be 50 characters or less');
+  }
+
+  if (!data.displayName || typeof data.displayName !== 'string' || data.displayName.length === 0) {
+    errors.push('Display name is required');
+  }
+  if (data.displayName && data.displayName.length > 100) {
+    errors.push('Display name must be 100 characters or less');
+  }
+
+  if (!data.content || typeof data.content !== 'string' || data.content.length === 0) {
+    errors.push('Content is required');
+  }
+  if (data.content && data.content.length > 2000) {
+    errors.push('Content must be 2000 characters or less');
+  }
+
+  if (typeof data.likesCount !== 'number' || data.likesCount < 0) {
+    errors.push('Likes count must be a non-negative number');
+  }
+
+  if (typeof data.commentsCount !== 'number' || data.commentsCount < 0) {
+    errors.push('Comments count must be a non-negative number');
+  }
+
+  if (!data.createdAt || typeof data.createdAt !== 'string') {
+    errors.push('Created at timestamp is required');
+  }
+
+  if (typeof data.feedTimestamp !== 'number' || data.feedTimestamp < 0) {
+    errors.push('Feed timestamp must be a non-negative number');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Simple validation function for create feed items request
+ */
+export function validateCreateFeedItemsRequest(data) {
+  const errors = [];
+
+  if (!data.feedItems || !Array.isArray(data.feedItems)) {
+    errors.push('Feed items must be an array');
+    return { isValid: false, errors };
+  }
+
+  if (data.feedItems.length === 0) {
+    errors.push('At least one feed item is required');
+  }
+
+  if (data.feedItems.length > 25) {
+    errors.push('Maximum 25 feed items allowed per request');
+  }
+
+  // Validate each feed item
+  data.feedItems.forEach((item, index) => {
+    const itemValidation = validateFeedItem(item);
+    if (!itemValidation.isValid) {
+      errors.push(`Feed item ${index}: ${itemValidation.errors.join(', ')}`);
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Create a clean feed item response object
+ */
+export function createFeedItemResponse(feedItem) {
+  return {
+    postId: feedItem.postId,
+    userId: feedItem.userId,
+    username: feedItem.username,
+    displayName: feedItem.displayName,
+    avatar: feedItem.avatar || '',
+    content: feedItem.content,
+    imageUrl: feedItem.imageUrl || '',
+    likesCount: feedItem.likesCount || 0,
+    commentsCount: feedItem.commentsCount || 0,
+    createdAt: feedItem.createdAt,
+    feedTimestamp: feedItem.feedTimestamp,
+  };
+}
+
+/**
+ * Create a clean feed response object
+ */
+export function createFeedResponse(feedItems, userId) {
+  return {
+    feedItems: feedItems.map(createFeedItemResponse),
+    userId: userId,
+  };
+}
