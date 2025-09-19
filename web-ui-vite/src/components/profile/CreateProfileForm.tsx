@@ -16,6 +16,8 @@ import { profileApi } from '../../services/api-client';
 export const CreateProfileForm: React.FC = () => {
   const { formData, errors, updateField, validateField, validateForm, resetForm } = useCreateProfileForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +28,40 @@ export const CreateProfileForm: React.FC = () => {
     }
 
     setIsSubmitting(true);
+    setSubmitError(null);
+    setIsSuccess(false);
     try {
-      const profile = await profileApi.create(formData);
+      // Create clean request data - only include optional fields if they have values
+      const requestData: any = {
+        username: formData.username,
+        email: formData.email,
+        displayName: formData.displayName,
+      };
+
+      // Only include optional fields if they have non-empty values
+      if (formData.bio && formData.bio.trim()) {
+        requestData.bio = formData.bio;
+      }
+      if (formData.avatar && formData.avatar.trim()) {
+        requestData.avatar = formData.avatar;
+      }
+
+      const profile = await profileApi.create(requestData);
       console.log('Profile created successfully:', profile);
+      setIsSuccess(true);
       resetForm();
     } catch (error) {
       console.error('Failed to create profile:', error);
+
+      // Extract meaningful error message
+      let errorMessage = 'Failed to create profile. Please try again.';
+
+      if (error instanceof Error) {
+        // For now, use the raw error message from Zod or API
+        errorMessage = error.message || errorMessage;
+      }
+
+      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -40,6 +70,18 @@ export const CreateProfileForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="create-profile-form">
       <h2>Create Your Profile</h2>
+
+      {submitError && (
+        <div className="form-error" role="alert">
+          {submitError}
+        </div>
+      )}
+
+      {isSuccess && (
+        <div className="form-success" role="alert">
+          Profile created successfully! Welcome to the platform.
+        </div>
+      )}
 
       <FormField
         id="username"

@@ -2,6 +2,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
 import { v4 as uuidv4 } from 'uuid';
+import { validateCreateProfileRequest, createProfileResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -44,8 +45,9 @@ export const handler = async (event) => {
 
     const request = JSON.parse(event.body);
 
-    // Validate required fields
-    if (!request.username || !request.email || !request.displayName) {
+    // Validate request using shared schema
+    const validation = validateCreateProfileRequest(request);
+    if (!validation.isValid) {
       return {
         statusCode: 400,
         headers: {
@@ -55,7 +57,8 @@ export const handler = async (event) => {
           'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT'
         },
         body: JSON.stringify({
-          error: 'username, email, and displayName are required'
+          error: 'Validation failed',
+          details: validation.errors
         }),
       };
     }
@@ -105,20 +108,8 @@ export const handler = async (event) => {
       }],
     }));
 
-    // Return profile (without internal fields)
-    const responseProfile = {
-      userId: profile.userId,
-      username: profile.username,
-      displayName: profile.displayName,
-      bio: profile.bio,
-      avatar: profile.avatar,
-      followersCount: profile.followersCount,
-      followingCount: profile.followingCount,
-      postsCount: profile.postsCount,
-      isVerified: profile.isVerified,
-      isPrivate: profile.isPrivate,
-      createdAt: profile.createdAt,
-    };
+    // Return profile using shared response formatter
+    const responseProfile = createProfileResponse(profile);
 
     return {
       statusCode: 201,

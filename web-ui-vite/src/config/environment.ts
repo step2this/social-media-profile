@@ -11,7 +11,7 @@ import { z } from 'zod';
  * Environment configuration schema for validation
  */
 const EnvironmentSchema = z.object({
-  apiUrl: z.string().url('Invalid API URL'),
+  apiUrl: z.string().url({ message: 'Invalid API URL' }),
   nodeEnv: z.enum(['development', 'production', 'test']),
 });
 

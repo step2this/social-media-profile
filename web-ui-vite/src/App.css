@@ -40,3 +40,25 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Form error styling */
+.form-error {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: #c00;
+  font-size: 14px;
+}
+
+/* Form success styling */
+.form-success {
+  background-color: #efe;
+  border: 1px solid #cfc;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: #060;
+  font-size: 14px;
+}

@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { CreateProfileRequestSchema } from '../schemas/profile';
+import { CreateProfileRequestSchema } from '../schemas/shared-schemas';
 import { ZodError } from 'zod';
 
 /**
@@ -16,6 +16,8 @@ interface FormState {
   username: string;
   email: string;
   displayName: string;
+  bio: string;
+  avatar: string;
 }
 
 /**
@@ -25,6 +27,8 @@ interface ValidationErrors {
   username?: string;
   email?: string;
   displayName?: string;
+  bio?: string;
+  avatar?: string;
 }
 
 /**
@@ -46,6 +50,8 @@ const INITIAL_STATE: FormState = {
   username: '',
   email: '',
   displayName: '',
+  bio: '',
+  avatar: '',
 };
 
 /**
@@ -87,7 +93,7 @@ export const useCreateProfileForm = (): UseCreateProfileFormReturn => {
       }));
     } catch (error) {
       if (error instanceof ZodError) {
-        const fieldError = error.errors.find(err => err.path[0] === field);
+        const fieldError = error.issues.find(err => err.path[0] === field);
         if (fieldError) {
           setErrors(prev => ({
             ...prev,
@@ -109,7 +115,7 @@ export const useCreateProfileForm = (): UseCreateProfileFormReturn => {
     } catch (error) {
       if (error instanceof ZodError) {
         const newErrors: ValidationErrors = {};
-        error.errors.forEach(err => {
+        error.issues.forEach(err => {
           const field = err.path[0] as keyof FormState;
           newErrors[field] = err.message;
         });

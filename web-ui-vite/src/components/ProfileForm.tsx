@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { type CreateProfileRequest, type UpdateProfileRequest, validateCreateRequest, validateUpdateRequest } from '../schemas/profile';
+import { type CreateProfileRequest, type UpdateProfileRequest, validateCreateRequest, validateUpdateRequest } from '../schemas/shared-schemas';
 import { profileApi, handleApiError } from '../services/api-client';
 
 interface ProfileFormProps {

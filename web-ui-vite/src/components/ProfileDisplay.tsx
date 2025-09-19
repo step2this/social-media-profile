@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { type Profile } from '../schemas/profile';
+import { type ProfileResponse } from '../schemas/shared-schemas';
 import { profileApi, handleApiError } from '../services/api-client';
 import { ProfileForm } from './ProfileForm';
 
@@ -19,7 +19,7 @@ export const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
   userId,
   allowEdit = false
 }) => {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -41,7 +41,7 @@ export const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
     loadProfile();
   }, [userId]);
 
-  const handleEditSuccess = (updatedProfile: Profile) => {
+  const handleEditSuccess = (updatedProfile: ProfileResponse) => {
     setProfile(updatedProfile);
     setIsEditing(false);
   };
@@ -92,7 +92,6 @@ export const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
           mode="edit"
           initialData={{
             username: profile.username,
-            email: profile.email,
             displayName: profile.displayName,
             bio: profile.bio,
             avatar: profile.avatar
@@ -168,10 +167,6 @@ export const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
       </div>
 
       <div className="profile-metadata">
-        <div className="metadata-item">
-          <span className="metadata-label">Email:</span>
-          <span className="metadata-value">{profile.email}</span>
-        </div>
         <div className="metadata-item">
           <span className="metadata-label">Member since:</span>
           <span className="metadata-value">

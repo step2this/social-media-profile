@@ -6,15 +6,14 @@
  */
 
 import ky, { type KyInstance } from 'ky';
-import { flow, pipe } from 'lodash/fp';
 import { ENV } from '../config/environment';
 import {
-  type Profile,
+  type ProfileResponse,
   type CreateProfileRequest,
   type UpdateProfileRequest,
-  validateProfile,
-  validateApiError
-} from '../schemas/profile';
+  validateApiError,
+  validateProfileResponse
+} from '../schemas/shared-schemas';
 
 /**
  * API client configuration
@@ -82,23 +81,20 @@ export const profileApi = {
    * @param profileData - Profile creation data
    * @returns Promise resolving to created profile
    */
-  create: flow([
-    (profileData: CreateProfileRequest) =>
-      makeRequest<Profile>('post', 'profiles', { json: profileData }),
-    (profilePromise: Promise<Profile>) =>
-      profilePromise.then(validateProfile)
-  ]),
+  create: async (profileData: CreateProfileRequest): Promise<ProfileResponse> => {
+    const response = await makeRequest<ProfileResponse>('post', 'profiles', { json: profileData });
+    return validateProfileResponse(response);
+  },
 
   /**
    * Get profile by user ID
    * @param userId - User identifier
    * @returns Promise resolving to profile data
    */
-  getById: flow([
-    (userId: string) => makeRequest<Profile>('get', `profiles/${userId}`),
-    (profilePromise: Promise<Profile>) =>
-      profilePromise.then(validateProfile)
-  ]),
+  getById: async (userId: string): Promise<ProfileResponse> => {
+    const response = await makeRequest<ProfileResponse>('get', `profiles/${userId}`);
+    return validateProfileResponse(response);
+  },
 
   /**
    * Update existing profile
@@ -106,12 +102,10 @@ export const profileApi = {
    * @param updates - Profile update data
    * @returns Promise resolving to updated profile
    */
-  update: (userId: string, updates: UpdateProfileRequest) =>
-    pipe(
-      () => makeRequest<Profile>('put', `profiles/${userId}`, { json: updates }),
-      (profilePromise: Promise<Profile>) =>
-        profilePromise.then(validateProfile)
-    )(),
+  update: async (userId: string, updates: UpdateProfileRequest): Promise<ProfileResponse> => {
+    const response = await makeRequest<ProfileResponse>('put', `profiles/${userId}`, { json: updates });
+    return validateProfileResponse(response);
+  },
 };
 
 /**
@@ -128,5 +122,5 @@ export const handleApiError = (error: unknown): string => {
  * Request ID generation for debugging
  */
 export const generateRequestId = (): string => {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 };
