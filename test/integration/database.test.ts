@@ -62,7 +62,7 @@ describe('Database Integration Tests', () => {
 
       expect(dynamoMock.commandCalls(PutCommand)).toHaveLength(1);
       const putCall = dynamoMock.commandCalls(PutCommand)[0];
-      expect(putCall.args[0].input.Item).toEqual(mockUser);
+      expect(putCall?.args?.[0]?.input?.Item).toEqual(mockUser);
     });
 
     test('should retrieve user by ID', async () => {

@@ -67,7 +67,7 @@ describe('Event Integration Tests', () => {
       expect(eventBridgeMock.commandCalls(PutEventsCommand)).toHaveLength(1);
 
       const putCall = eventBridgeMock.commandCalls(PutEventsCommand)[0];
-      const sentEvent = putCall.args[0].input.Entries?.[0];
+      const sentEvent = putCall?.args?.[0]?.input?.Entries?.[0];
 
       expect(sentEvent?.Source).toBe('profile.service');
       expect(sentEvent?.DetailType).toBe('User Created');
@@ -116,7 +116,7 @@ describe('Event Integration Tests', () => {
       }));
 
       const putCall = eventBridgeMock.commandCalls(PutEventsCommand)[0];
-      const sentEvent = putCall.args[0].input.Entries?.[0];
+      const sentEvent = putCall?.args?.[0]?.input?.Entries?.[0];
 
       expect(sentEvent?.DetailType).toBe('User Updated');
 
@@ -157,7 +157,7 @@ describe('Event Integration Tests', () => {
       }));
 
       const putCall = eventBridgeMock.commandCalls(PutEventsCommand)[0];
-      const sentEvent = putCall.args[0].input.Entries?.[0];
+      const sentEvent = putCall?.args?.[0]?.input?.Entries?.[0];
 
       const detail = JSON.parse(sentEvent?.Detail || '{}');
       expect(detail.cleanup.postsDeleted).toBe(5);
@@ -199,7 +199,7 @@ describe('Event Integration Tests', () => {
       }));
 
       const putCall = eventBridgeMock.commandCalls(PutEventsCommand)[0];
-      const sentEvent = putCall.args[0].input.Entries?.[0];
+      const sentEvent = putCall?.args?.[0]?.input?.Entries?.[0];
 
       expect(sentEvent?.DetailType).toBe('Post Created');
 
@@ -236,7 +236,7 @@ describe('Event Integration Tests', () => {
       }));
 
       const putCall = eventBridgeMock.commandCalls(PutEventsCommand)[0];
-      const sentEvent = putCall.args[0].input.Entries?.[0];
+      const sentEvent = putCall?.args?.[0]?.input?.Entries?.[0];
 
       const detail = JSON.parse(sentEvent?.Detail || '{}');
       expect(detail.likedByUserId).toBe('user456');
@@ -284,7 +284,7 @@ describe('Event Integration Tests', () => {
       expect(result.Entries).toHaveLength(3);
 
       const putCall = eventBridgeMock.commandCalls(PutEventsCommand)[0];
-      expect(putCall.args[0].input.Entries).toHaveLength(3);
+      expect(putCall?.args?.[0]?.input?.Entries).toHaveLength(3);
     });
 
     test('should handle partial batch failures', async () => {
@@ -444,7 +444,7 @@ describe('Event Integration Tests', () => {
       }));
 
       const putCall = eventBridgeMock.commandCalls(PutEventsCommand)[0];
-      const entries = putCall.args[0].input.Entries;
+      const entries = putCall?.args?.[0]?.input?.Entries;
 
       expect(entries?.[0].EventBusName).toBe(EVENT_BUS_NAME);
       expect(entries?.[1].EventBusName).toBe('system-events');
