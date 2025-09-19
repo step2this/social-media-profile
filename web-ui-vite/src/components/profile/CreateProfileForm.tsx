@@ -5,22 +5,35 @@
  * This is a minimal implementation to test our foundation pieces.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useCreateProfileForm } from '../../hooks/useCreateProfileForm';
 import { FormField } from '../forms/FormField';
+import { profileApi } from '../../services/api-client';
 
 /**
  * CreateProfileForm component
  */
 export const CreateProfileForm: React.FC = () => {
   const { formData, errors, updateField, validateField, validateForm, resetForm } = useCreateProfileForm();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Form submitted with valid data:', formData);
-    } else {
+
+    if (!validateForm()) {
       console.log('Form validation failed');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const profile = await profileApi.create(formData);
+      console.log('Profile created successfully:', profile);
+      resetForm();
+    } catch (error) {
+      console.error('Failed to create profile:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -60,10 +73,10 @@ export const CreateProfileForm: React.FC = () => {
       />
 
       <div className="form-actions">
-        <button type="submit" className="btn btn-primary">
-          Create Profile
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          {isSubmitting ? 'Creating Profile...' : 'Create Profile'}
         </button>
-        <button type="button" onClick={resetForm} className="btn btn-secondary">
+        <button type="button" onClick={resetForm} className="btn btn-secondary" disabled={isSubmitting}>
           Reset
         </button>
       </div>
