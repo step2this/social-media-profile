@@ -519,3 +519,169 @@ export function createLikeActionResponse(isLiked, likesCount) {
     likesCount: Math.max(likesCount, 0),
   };
 }
+
+/**
+ * Social domain schemas and validation
+ */
+
+/**
+ * Follow request schema
+ */
+export const FollowRequestSchema = {
+  type: 'object',
+  required: ['followerId', 'followedUserId'],
+  properties: {
+    followerId: { type: 'string', minLength: 1 },
+    followedUserId: { type: 'string', minLength: 1 }
+  }
+};
+
+/**
+ * Unfollow request schema (same as follow)
+ */
+export const UnfollowRequestSchema = FollowRequestSchema;
+
+/**
+ * Follow status response schema
+ */
+export const FollowStatusResponseSchema = {
+  type: 'object',
+  required: ['isFollowing', 'followerId', 'followedUserId'],
+  properties: {
+    isFollowing: { type: 'boolean' },
+    followerId: { type: 'string', minLength: 1 },
+    followedUserId: { type: 'string', minLength: 1 }
+  }
+};
+
+/**
+ * Follow action response schema (for follow/unfollow operations)
+ */
+export const FollowActionResponseSchema = {
+  type: 'object',
+  required: ['message', 'followerId', 'followedUserId', 'createdAt'],
+  properties: {
+    message: { type: 'string', minLength: 1 },
+    followerId: { type: 'string', minLength: 1 },
+    followedUserId: { type: 'string', minLength: 1 },
+    createdAt: { type: 'string', format: 'date-time' }
+  }
+};
+
+/**
+ * Simple validation function for follow/unfollow requests
+ */
+export function validateFollowRequest(data) {
+  const errors = [];
+
+  if (!data.followerId || typeof data.followerId !== 'string' || data.followerId.length === 0) {
+    errors.push('Follower ID is required');
+  }
+
+  if (!data.followedUserId || typeof data.followedUserId !== 'string' || data.followedUserId.length === 0) {
+    errors.push('Followed user ID is required');
+  }
+
+  if (data.followerId === data.followedUserId) {
+    errors.push('Cannot follow yourself');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Create a clean follow status response object
+ */
+export function createFollowStatusResponse(followItem, followerId, followedUserId) {
+  return {
+    isFollowing: !!followItem,
+    followerId: followerId,
+    followedUserId: followedUserId,
+  };
+}
+
+/**
+ * Create a clean follow action response object
+ */
+export function createFollowActionResponse(isFollow, followerId, followedUserId, timestamp) {
+  return {
+    message: isFollow ? 'Successfully followed user' : 'Successfully unfollowed user',
+    followerId: followerId,
+    followedUserId: followedUserId,
+    createdAt: timestamp,
+  };
+}
+
+/**
+ * Images domain schemas and validation
+ */
+
+/**
+ * Upload URL request schema
+ */
+export const UploadUrlRequestSchema = {
+  type: 'object',
+  required: ['fileName', 'fileType', 'userId'],
+  properties: {
+    fileName: { type: 'string', minLength: 1 },
+    fileType: { type: 'string', minLength: 1, pattern: '^image\/' },
+    userId: { type: 'string', minLength: 1 }
+  }
+};
+
+/**
+ * Upload URL response schema
+ */
+export const UploadUrlResponseSchema = {
+  type: 'object',
+  required: ['uploadUrl', 'imageUrl', 'key', 'fileName'],
+  properties: {
+    uploadUrl: { type: 'string', minLength: 1 },
+    imageUrl: { type: 'string', minLength: 1 },
+    key: { type: 'string', minLength: 1 },
+    fileName: { type: 'string', minLength: 1 }
+  }
+};
+
+/**
+ * Simple validation function for upload URL requests
+ */
+export function validateUploadUrlRequest(data) {
+  const errors = [];
+
+  if (!data.fileName || typeof data.fileName !== 'string' || data.fileName.length === 0) {
+    errors.push('File name is required');
+  }
+
+  if (!data.fileType || typeof data.fileType !== 'string' || data.fileType.length === 0) {
+    errors.push('File type is required');
+  }
+
+  if (data.fileType && !data.fileType.startsWith('image/')) {
+    errors.push('Only image files are allowed');
+  }
+
+  if (!data.userId || typeof data.userId !== 'string' || data.userId.length === 0) {
+    errors.push('User ID is required');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Create a clean upload URL response object
+ */
+export function createUploadUrlResponse(uploadUrl, imageUrl, key, fileName) {
+  return {
+    uploadUrl: uploadUrl,
+    imageUrl: imageUrl,
+    key: key,
+    fileName: fileName,
+  };
+}

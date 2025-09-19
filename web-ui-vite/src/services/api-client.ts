@@ -18,12 +18,20 @@ import {
   type LikePostRequest,
   type LikeStatusResponse,
   type LikeActionResponse,
+  type FollowRequest,
+  type FollowStatusResponse,
+  type FollowActionResponse,
+  type UploadUrlRequest,
+  type UploadUrlResponse,
   validateApiError,
   validateProfileResponse,
   validatePostResponse,
   validateGetFeedResponse,
   validateLikeStatusResponse,
-  validateLikeActionResponse
+  validateLikeActionResponse,
+  validateFollowStatusResponse,
+  validateFollowActionResponse,
+  validateUploadUrlResponse
 } from '../schemas/shared-schemas';
 
 /**
@@ -201,6 +209,57 @@ export const likesApi = {
   checkLikeStatus: async (userId: string, postId: string): Promise<LikeStatusResponse> => {
     const response = await makeRequest<LikeStatusResponse>('get', `likes/${userId}/${postId}`);
     return validateLikeStatusResponse(response);
+  },
+};
+
+/**
+ * Social API endpoints using shared schemas
+ */
+export const socialApi = {
+  /**
+   * Follow a user
+   * @param followData - Follow request data
+   * @returns Promise resolving to follow action result
+   */
+  followUser: async (followData: FollowRequest): Promise<FollowActionResponse> => {
+    const response = await makeRequest<FollowActionResponse>('post', 'follows', { json: followData });
+    return validateFollowActionResponse(response);
+  },
+
+  /**
+   * Unfollow a user
+   * @param unfollowData - Unfollow request data
+   * @returns Promise resolving to unfollow action result
+   */
+  unfollowUser: async (unfollowData: FollowRequest): Promise<FollowActionResponse> => {
+    const response = await makeRequest<FollowActionResponse>('delete', 'follows', { json: unfollowData });
+    return validateFollowActionResponse(response);
+  },
+
+  /**
+   * Check follow status between users
+   * @param followerId - Follower user identifier
+   * @param followedUserId - Followed user identifier
+   * @returns Promise resolving to follow status
+   */
+  checkFollowStatus: async (followerId: string, followedUserId: string): Promise<FollowStatusResponse> => {
+    const response = await makeRequest<FollowStatusResponse>('get', `follows/${followerId}/${followedUserId}`);
+    return validateFollowStatusResponse(response);
+  },
+};
+
+/**
+ * Images API endpoints using shared schemas
+ */
+export const imagesApi = {
+  /**
+   * Get upload URL for image
+   * @param uploadData - Upload URL request data
+   * @returns Promise resolving to upload URL and image details
+   */
+  getUploadUrl: async (uploadData: UploadUrlRequest): Promise<UploadUrlResponse> => {
+    const response = await makeRequest<UploadUrlResponse>('post', 'images/upload-url', { json: uploadData });
+    return validateUploadUrlResponse(response);
   },
 };
 

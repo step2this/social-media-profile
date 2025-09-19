@@ -156,6 +156,69 @@ export const LikeActionResponseSchema = z.object({
 });
 
 /**
+ * Social domain schemas - matches server validation exactly
+ */
+
+/**
+ * Follow request schema
+ */
+export const FollowRequestSchema = z.object({
+  followerId: z.string().min(1, 'Follower ID is required'),
+  followedUserId: z.string().min(1, 'Followed user ID is required'),
+}).refine((data) => data.followerId !== data.followedUserId, {
+  message: 'Cannot follow yourself',
+});
+
+/**
+ * Unfollow request schema (same as follow)
+ */
+export const UnfollowRequestSchema = FollowRequestSchema;
+
+/**
+ * Follow status response schema
+ */
+export const FollowStatusResponseSchema = z.object({
+  isFollowing: z.boolean(),
+  followerId: z.string().min(1, 'Follower ID is required'),
+  followedUserId: z.string().min(1, 'Followed user ID is required'),
+});
+
+/**
+ * Follow action response schema (for follow/unfollow operations)
+ */
+export const FollowActionResponseSchema = z.object({
+  message: z.string().min(1, 'Message is required'),
+  followerId: z.string().min(1, 'Follower ID is required'),
+  followedUserId: z.string().min(1, 'Followed user ID is required'),
+  createdAt: z.string().datetime(),
+});
+
+/**
+ * Images domain schemas - matches server validation exactly
+ */
+
+/**
+ * Upload URL request schema
+ */
+export const UploadUrlRequestSchema = z.object({
+  fileName: z.string().min(1, 'File name is required'),
+  fileType: z.string().min(1, 'File type is required').refine((type) => type.startsWith('image/'), {
+    message: 'Only image files are allowed',
+  }),
+  userId: z.string().min(1, 'User ID is required'),
+});
+
+/**
+ * Upload URL response schema
+ */
+export const UploadUrlResponseSchema = z.object({
+  uploadUrl: z.string().min(1, 'Upload URL is required'),
+  imageUrl: z.string().min(1, 'Image URL is required'),
+  key: z.string().min(1, 'Key is required'),
+  fileName: z.string().min(1, 'File name is required'),
+});
+
+/**
  * API error response schema
  */
 export const ApiErrorSchema = z.object({
@@ -176,6 +239,12 @@ export type LikePostRequest = z.infer<typeof LikePostRequestSchema>;
 export type UnlikePostRequest = z.infer<typeof UnlikePostRequestSchema>;
 export type LikeStatusResponse = z.infer<typeof LikeStatusResponseSchema>;
 export type LikeActionResponse = z.infer<typeof LikeActionResponseSchema>;
+export type FollowRequest = z.infer<typeof FollowRequestSchema>;
+export type UnfollowRequest = z.infer<typeof UnfollowRequestSchema>;
+export type FollowStatusResponse = z.infer<typeof FollowStatusResponseSchema>;
+export type FollowActionResponse = z.infer<typeof FollowActionResponseSchema>;
+export type UploadUrlRequest = z.infer<typeof UploadUrlRequestSchema>;
+export type UploadUrlResponse = z.infer<typeof UploadUrlResponseSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 // Validation helper functions
@@ -191,4 +260,10 @@ export const validateLikePostRequest = (data: unknown): LikePostRequest => LikeP
 export const validateUnlikePostRequest = (data: unknown): UnlikePostRequest => UnlikePostRequestSchema.parse(data);
 export const validateLikeStatusResponse = (data: unknown): LikeStatusResponse => LikeStatusResponseSchema.parse(data);
 export const validateLikeActionResponse = (data: unknown): LikeActionResponse => LikeActionResponseSchema.parse(data);
+export const validateFollowRequest = (data: unknown): FollowRequest => FollowRequestSchema.parse(data);
+export const validateUnfollowRequest = (data: unknown): UnfollowRequest => UnfollowRequestSchema.parse(data);
+export const validateFollowStatusResponse = (data: unknown): FollowStatusResponse => FollowStatusResponseSchema.parse(data);
+export const validateFollowActionResponse = (data: unknown): FollowActionResponse => FollowActionResponseSchema.parse(data);
+export const validateUploadUrlRequest = (data: unknown): UploadUrlRequest => UploadUrlRequestSchema.parse(data);
+export const validateUploadUrlResponse = (data: unknown): UploadUrlResponse => UploadUrlResponseSchema.parse(data);
 export const validateApiError = (data: unknown): ApiError => ApiErrorSchema.parse(data);

@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { createFollowStatusResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -43,17 +44,16 @@ export const handler = async (event) => {
       },
     }));
 
+    // Format response using shared helper
+    const response = createFollowStatusResponse(result.Item, followerId, followedUserId);
+
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
-      body: JSON.stringify({
-        isFollowing: !!result.Item,
-        followerId,
-        followedUserId,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error('Error checking follow status:', error);

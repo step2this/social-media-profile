@@ -1,6 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
+import { validateFollowRequest, createFollowActionResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -27,18 +28,25 @@ const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME;
 
 export const handler = async (event) => {
   try {
-    const { followerId, followedUserId } = JSON.parse(event.body || '{}');
+    const request = JSON.parse(event.body || '{}');
 
-    if (!followerId || !followedUserId) {
+    // Validate request using shared schema
+    const validation = validateFollowRequest(request);
+    if (!validation.isValid) {
       return {
         statusCode: 400,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ error: 'Missing followerId or followedUserId' }),
+        body: JSON.stringify({
+          error: 'Validation failed',
+          details: validation.errors
+        }),
       };
     }
+
+    const { followerId, followedUserId } = request;
 
     const timestamp = new Date().toISOString();
 
@@ -111,18 +119,16 @@ export const handler = async (event) => {
       ],
     }));
 
+    // Format response using shared helper
+    const response = createFollowActionResponse(false, followerId, followedUserId, timestamp);
+
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
-      body: JSON.stringify({
-        message: 'Successfully unfollowed user',
-        followerId,
-        followedUserId,
-        timestamp,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error('Error unfollowing user:', error);

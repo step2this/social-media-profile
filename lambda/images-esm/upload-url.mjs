@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
+import { validateUploadUrlRequest, createUploadUrlResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const s3Client = new S3Client({
@@ -41,30 +42,22 @@ export const handler = async (event) => {
       };
     }
 
-    const requestBody = JSON.parse(event.body);
-    const { fileName, fileType, userId } = requestBody;
+    const request = JSON.parse(event.body);
 
-    // Validate input
-    if (!fileName || !fileType || !userId) {
+    // Validate request using shared schema
+    const validation = validateUploadUrlRequest(request);
+    if (!validation.isValid) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({
-          error: 'fileName, fileType, and userId are required'
+          error: 'Validation failed',
+          details: validation.errors
         }),
       };
     }
 
-    // Validate file type (images only)
-    if (!fileType.startsWith('image/')) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: 'Only image files are allowed'
-        }),
-      };
-    }
+    const { fileName, fileType, userId } = request;
 
     // Generate unique file key
     const fileExtension = fileName.split('.').pop() || 'jpg';
@@ -89,15 +82,13 @@ export const handler = async (event) => {
     // Generate the public URL for accessing the image
     const imageUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
 
+    // Format response using shared helper
+    const response = createUploadUrlResponse(uploadUrl, imageUrl, key, uniqueFileName);
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        uploadUrl,
-        imageUrl,
-        key,
-        fileName: uniqueFileName,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error('Error generating upload URL:', error);

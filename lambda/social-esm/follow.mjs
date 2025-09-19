@@ -1,6 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
+import { validateFollowRequest, createFollowActionResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -27,29 +28,25 @@ const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME;
 
 export const handler = async (event) => {
   try {
-    const { followerId, followedUserId } = JSON.parse(event.body || '{}');
+    const request = JSON.parse(event.body || '{}');
 
-    if (!followerId || !followedUserId) {
+    // Validate request using shared schema
+    const validation = validateFollowRequest(request);
+    if (!validation.isValid) {
       return {
         statusCode: 400,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
         },
-        body: JSON.stringify({ error: 'Missing followerId or followedUserId' }),
+        body: JSON.stringify({
+          error: 'Validation failed',
+          details: validation.errors
+        }),
       };
     }
 
-    if (followerId === followedUserId) {
-      return {
-        statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        body: JSON.stringify({ error: 'Cannot follow yourself' }),
-      };
-    }
+    const { followerId, followedUserId } = request;
 
     const timestamp = new Date().toISOString();
 
@@ -128,18 +125,16 @@ export const handler = async (event) => {
       ],
     }));
 
+    // Format response using shared helper
+    const response = createFollowActionResponse(true, followerId, followedUserId, timestamp);
+
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
-      body: JSON.stringify({
-        message: 'Successfully followed user',
-        followerId,
-        followedUserId,
-        createdAt: timestamp,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error('Error following user:', error);
