@@ -7,13 +7,20 @@ import {
 } from '../shared/schemas/admin';
 
 // Pure function - single responsibility: create request options
-const createRequestOptions = (method: string, body?: unknown): RequestInit => ({
-  method,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  ...(body && { body: JSON.stringify(body) }),
-});
+const createRequestOptions = (method: string, body?: unknown): RequestInit => {
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  if (body) {
+    options.body = JSON.stringify(body);
+  }
+
+  return options;
+};
 
 // Pure function - single responsibility: handle HTTP errors
 const handleHttpError = async (response: Response): Promise<Response> => {
