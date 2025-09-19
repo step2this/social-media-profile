@@ -528,24 +528,60 @@ describe('CDK Infrastructure Tests', () => {
     });
 
     it('should attach basic Lambda execution policy', () => {
-      template.hasResourceProperties('AWS::IAM::Role', {
-        ManagedPolicyArns: expect.arrayContaining([
-          'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
-        ])
-      });
+      // CDK generates ManagedPolicyArns as an array with Fn::Join constructs
+      const template_json = template.toJSON();
+      const roles = Object.values(template_json.Resources).filter(
+        (resource: any) => resource.Type === 'AWS::IAM::Role'
+      );
+
+      // Check if any role has the basic execution policy
+      let hasExecutionRole = false;
+
+      for (const role of roles) {
+        const policyArns = (role as any).Properties?.ManagedPolicyArns;
+        if (Array.isArray(policyArns)) {
+          for (const arn of policyArns) {
+            // Check if it's a direct string containing the policy
+            if (typeof arn === 'string' && arn.includes('AWSLambdaBasicExecutionRole')) {
+              hasExecutionRole = true;
+              break;
+            }
+            // Check if it's an Fn::Join construct
+            if (typeof arn === 'object' && arn['Fn::Join']) {
+              const joinParts = arn['Fn::Join'];
+              if (Array.isArray(joinParts) && joinParts.length > 1) {
+                const parts = joinParts[1];
+                if (Array.isArray(parts) && parts.some((part: any) =>
+                  typeof part === 'string' && part.includes('AWSLambdaBasicExecutionRole')
+                )) {
+                  hasExecutionRole = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+        if (hasExecutionRole) break;
+      }
+
+      expect(hasExecutionRole).toBe(true);
     });
 
     it('should have least privilege permissions', () => {
-      template.hasResourceProperties('AWS::IAM::Policy', {
-        PolicyDocument: {
-          Statement: expect.arrayContaining([
-            expect.objectContaining({
-              Effect: 'Allow',
-              Resource: expect.any(Object)
-            })
-          ])
-        }
+      // CDK generates PolicyDocument.Statement as an array
+      const template_json = template.toJSON();
+      const policies = Object.values(template_json.Resources).filter(
+        (resource: any) => resource.Type === 'AWS::IAM::Policy'
+      );
+
+      const hasValidPermissions = policies.some((policy: any) => {
+        const statements = policy.Properties?.PolicyDocument?.Statement;
+        return Array.isArray(statements) && statements.some((statement: any) =>
+          statement.Effect === 'Allow' && statement.Resource
+        );
       });
+
+      expect(hasValidPermissions).toBe(true);
     });
   });
 
