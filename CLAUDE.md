@@ -138,6 +138,9 @@ The profile-processor.ts demonstrates common event-driven patterns:
 - **Small functions**: Keep functions focused and small (single responsibility)
 - **Minimal conditional logic**: Avoid complex if/else chains
 - **Functional over procedural**: Prefer map/filter/reduce over for loops
+- lodash/fp returns things in different orders from lodash. Don't be afraid of lodash/fp, understand deeply how it works and adapt how you consume functions in lodash/fp to work with other things. don't give up on it because something doesn't return what you expect in the right place. 
+- **Documentation** include some comments in a consistent format at the top of every file explaining what it does, and add a comment on top of each method. if typescript or js supports something similar to JavaDoc formatting, use that. 
+- **Use libraries**: For example use a library to handle JSON formatting, do not use obvious anti-patterns like constructing http requests by hand, constructing JSON by hand, etc. When you find yourself concatanating strings, use a library. 
 
 ### Testing Principles
 - **Small, focused tests**: Each test validates one specific behavior
