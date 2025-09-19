@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import React from 'react'
 import { CreateProfileForm } from './components/profile/CreateProfileForm'
 import './App.css'

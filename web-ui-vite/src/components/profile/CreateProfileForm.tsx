@@ -14,7 +14,7 @@ import { profileApi } from '../../services/api-client';
  * CreateProfileForm component
  */
 export const CreateProfileForm: React.FC = () => {
-  const { formData, errors, updateField, validateField, validateForm, resetForm } = useCreateProfileForm();
+  const { formData, errors, updateField, validateForm, resetForm } = useCreateProfileForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);

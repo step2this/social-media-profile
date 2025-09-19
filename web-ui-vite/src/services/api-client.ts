@@ -11,8 +11,11 @@ import {
   type ProfileResponse,
   type CreateProfileRequest,
   type UpdateProfileRequest,
+  type CreatePostRequest,
+  type PostResponse,
   validateApiError,
-  validateProfileResponse
+  validateProfileResponse,
+  validatePostResponse
 } from '../schemas/shared-schemas';
 
 /**
@@ -105,6 +108,31 @@ export const profileApi = {
   update: async (userId: string, updates: UpdateProfileRequest): Promise<ProfileResponse> => {
     const response = await makeRequest<ProfileResponse>('put', `profiles/${userId}`, { json: updates });
     return validateProfileResponse(response);
+  },
+};
+
+/**
+ * Posts API endpoints using shared schemas
+ */
+export const postsApi = {
+  /**
+   * Create a new post
+   * @param postData - Post creation data
+   * @returns Promise resolving to created post
+   */
+  create: async (postData: CreatePostRequest): Promise<PostResponse> => {
+    const response = await makeRequest<PostResponse>('post', 'posts', { json: postData });
+    return validatePostResponse(response);
+  },
+
+  /**
+   * Get posts by user ID
+   * @param userId - User identifier
+   * @returns Promise resolving to user posts
+   */
+  getUserPosts: async (userId: string): Promise<PostResponse[]> => {
+    const response = await makeRequest<PostResponse[]>('get', `posts/user/${userId}`);
+    return response.map(validatePostResponse);
   },
 };
 

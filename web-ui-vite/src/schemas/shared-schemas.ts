@@ -52,6 +52,38 @@ export const UpdateProfileRequestSchema = z.object({
 });
 
 /**
+ * Posts domain schemas - matches server validation exactly
+ */
+
+/**
+ * Create post request schema
+ */
+export const CreatePostRequestSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  content: z.string().min(1, 'Content is required').max(2000, 'Content must be 2000 characters or less'),
+  imageUrl: z.preprocess(
+    (val) => val === '' ? undefined : val,
+    z.string().url({ message: 'Image URL must be a valid URL' }).optional()
+  ),
+});
+
+/**
+ * Post response schema - matches server response exactly
+ */
+export const PostResponseSchema = z.object({
+  postId: z.string().min(1, 'Post ID is required'),
+  userId: z.string().min(1, 'User ID is required'),
+  username: z.string().min(1, 'Username is required').max(50, 'Username too long'),
+  displayName: z.string().min(1, 'Display name is required').max(100, 'Display name too long'),
+  avatar: z.string(),
+  content: z.string().min(1, 'Content is required').max(2000, 'Content too long'),
+  imageUrl: z.string(),
+  likesCount: z.number().int().min(0),
+  commentsCount: z.number().int().min(0),
+  createdAt: z.string().datetime(),
+});
+
+/**
  * API error response schema
  */
 export const ApiErrorSchema = z.object({
@@ -63,10 +95,14 @@ export const ApiErrorSchema = z.object({
 export type CreateProfileRequest = z.infer<typeof CreateProfileRequestSchema>;
 export type ProfileResponse = z.infer<typeof ProfileResponseSchema>;
 export type UpdateProfileRequest = z.infer<typeof UpdateProfileRequestSchema>;
+export type CreatePostRequest = z.infer<typeof CreatePostRequestSchema>;
+export type PostResponse = z.infer<typeof PostResponseSchema>;
 export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 // Validation helper functions
 export const validateCreateRequest = (data: unknown): CreateProfileRequest => CreateProfileRequestSchema.parse(data);
 export const validateProfileResponse = (data: unknown): ProfileResponse => ProfileResponseSchema.parse(data);
 export const validateUpdateRequest = (data: unknown): UpdateProfileRequest => UpdateProfileRequestSchema.parse(data);
+export const validateCreatePostRequest = (data: unknown): CreatePostRequest => CreatePostRequestSchema.parse(data);
+export const validatePostResponse = (data: unknown): PostResponse => PostResponseSchema.parse(data);
 export const validateApiError = (data: unknown): ApiError => ApiErrorSchema.parse(data);
