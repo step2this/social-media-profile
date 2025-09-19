@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { createLikeStatusResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -69,15 +70,13 @@ export const handler = async (event) => {
       };
     }
 
+    // Format response using shared helper
+    const response = createLikeStatusResponse(likeResult.Item, postResult.Item, userId, postId);
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        isLiked: !!likeResult.Item,
-        likesCount: postResult.Item.likesCount || 0,
-        postId,
-        userId,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error('Error checking like status:', error);

@@ -428,3 +428,94 @@ export function createFeedResponse(feedItems, userId) {
     userId: userId,
   };
 }
+
+/**
+ * Likes domain schemas and validation
+ */
+
+/**
+ * Like post request schema
+ */
+export const LikePostRequestSchema = {
+  type: 'object',
+  required: ['userId', 'postId'],
+  properties: {
+    userId: { type: 'string', minLength: 1 },
+    postId: { type: 'string', minLength: 1 }
+  }
+};
+
+/**
+ * Unlike post request schema (same as like)
+ */
+export const UnlikePostRequestSchema = LikePostRequestSchema;
+
+/**
+ * Like status response schema
+ */
+export const LikeStatusResponseSchema = {
+  type: 'object',
+  required: ['isLiked', 'likesCount', 'postId', 'userId'],
+  properties: {
+    isLiked: { type: 'boolean' },
+    likesCount: { type: 'number', minimum: 0 },
+    postId: { type: 'string', minLength: 1 },
+    userId: { type: 'string', minLength: 1 }
+  }
+};
+
+/**
+ * Like action response schema (for like/unlike operations)
+ */
+export const LikeActionResponseSchema = {
+  type: 'object',
+  required: ['success', 'message', 'likesCount'],
+  properties: {
+    success: { type: 'boolean' },
+    message: { type: 'string', minLength: 1 },
+    likesCount: { type: 'number', minimum: 0 }
+  }
+};
+
+/**
+ * Simple validation function for like/unlike requests
+ */
+export function validateLikeRequest(data) {
+  const errors = [];
+
+  if (!data.userId || typeof data.userId !== 'string' || data.userId.length === 0) {
+    errors.push('User ID is required');
+  }
+
+  if (!data.postId || typeof data.postId !== 'string' || data.postId.length === 0) {
+    errors.push('Post ID is required');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Create a clean like status response object
+ */
+export function createLikeStatusResponse(likeItem, postItem, userId, postId) {
+  return {
+    isLiked: !!likeItem,
+    likesCount: postItem?.likesCount || 0,
+    postId: postId,
+    userId: userId,
+  };
+}
+
+/**
+ * Create a clean like action response object
+ */
+export function createLikeActionResponse(isLiked, likesCount) {
+  return {
+    success: true,
+    message: isLiked ? 'Post liked successfully' : 'Post unliked successfully',
+    likesCount: Math.max(likesCount, 0),
+  };
+}

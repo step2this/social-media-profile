@@ -15,10 +15,15 @@ import {
   type PostResponse,
   type GetFeedResponse,
   type CreateFeedItemsRequest,
+  type LikePostRequest,
+  type LikeStatusResponse,
+  type LikeActionResponse,
   validateApiError,
   validateProfileResponse,
   validatePostResponse,
-  validateGetFeedResponse
+  validateGetFeedResponse,
+  validateLikeStatusResponse,
+  validateLikeActionResponse
 } from '../schemas/shared-schemas';
 
 /**
@@ -160,6 +165,42 @@ export const feedApi = {
    */
   createFeedItems: async (feedItemsData: CreateFeedItemsRequest): Promise<void> => {
     await makeRequest<void>('post', 'feed/items', { json: feedItemsData });
+  },
+};
+
+/**
+ * Likes API endpoints using shared schemas
+ */
+export const likesApi = {
+  /**
+   * Like a post
+   * @param likeData - Like request data
+   * @returns Promise resolving to like action result
+   */
+  likePost: async (likeData: LikePostRequest): Promise<LikeActionResponse> => {
+    const response = await makeRequest<LikeActionResponse>('post', 'likes', { json: likeData });
+    return validateLikeActionResponse(response);
+  },
+
+  /**
+   * Unlike a post
+   * @param unlikeData - Unlike request data
+   * @returns Promise resolving to unlike action result
+   */
+  unlikePost: async (unlikeData: LikePostRequest): Promise<LikeActionResponse> => {
+    const response = await makeRequest<LikeActionResponse>('delete', 'likes', { json: unlikeData });
+    return validateLikeActionResponse(response);
+  },
+
+  /**
+   * Check like status for a post
+   * @param userId - User identifier
+   * @param postId - Post identifier
+   * @returns Promise resolving to like status
+   */
+  checkLikeStatus: async (userId: string, postId: string): Promise<LikeStatusResponse> => {
+    const response = await makeRequest<LikeStatusResponse>('get', `likes/${userId}/${postId}`);
+    return validateLikeStatusResponse(response);
   },
 };
 

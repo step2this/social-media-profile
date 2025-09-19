@@ -1,6 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { EventBridgeClient, PutEventsCommand } from '@aws-sdk/client-eventbridge';
+import { validateLikeRequest, createLikeActionResponse } from '../shared/schemas.mjs';
 
 // Initialize AWS SDK clients with top-level await
 const dynamoClient = new DynamoDBClient({
@@ -48,15 +49,22 @@ export const handler = async (event) => {
       };
     }
 
-    const { userId, postId } = JSON.parse(event.body);
+    const request = JSON.parse(event.body);
 
-    if (!userId || !postId) {
+    // Validate request using shared schema
+    const validation = validateLikeRequest(request);
+    if (!validation.isValid) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'userId and postId are required' }),
+        body: JSON.stringify({
+          error: 'Validation failed',
+          details: validation.errors
+        }),
       };
     }
+
+    const { userId, postId } = request;
 
     // Check if post exists
     const postResult = await docClient.send(new GetCommand({
@@ -162,14 +170,13 @@ export const handler = async (event) => {
       ],
     }));
 
+    // Format response using shared helper
+    const response = createLikeActionResponse(true, (post.likesCount || 0) + 1);
+
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        success: true,
-        message: 'Post liked successfully',
-        likesCount: (post.likesCount || 0) + 1,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error('Error liking post:', error);
